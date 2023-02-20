@@ -2,7 +2,7 @@
 Repository for our CptS 434 Neural Networks course. An AI that plays checkers and evolves through a genetic algorithm. Instructions for how to use will be provided at a later date.
 
 ## Setup
-Prerequisites:
+### Prerequisites
 * Python
 
 ## License
