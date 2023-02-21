@@ -1,5 +1,7 @@
 [package]
 name = "tools"
+description = "Tools implemented in Rust to speed up computation."
+repository = "https://github.com/genomicals/neuralnet"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,3 +12,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.18.0", features = ["extension-module"] }
+
