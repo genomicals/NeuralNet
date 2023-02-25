@@ -3,6 +3,7 @@
 from math import tanh
 import numpy as np
 import numpy.typing as npt
+import random
 
 
 def relu(x: int) -> int:
@@ -32,7 +33,11 @@ class NeuralNetwork():
 
 
     def set_weights():
-        pass
+        """Updates the weights to the provided values"""
+
+
+    def set_weights_random():
+        """Initalizes the weights to random values"""
 
 
     def _generate_network(self):
