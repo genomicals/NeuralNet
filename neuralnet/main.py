@@ -10,3 +10,12 @@ if __name__ == "__main__":
     network = nn.NeuralNetwork()
     test_matrix = np.array([[0, 1, 2, 3], [2, 3, 4]], dtype = object)
 
+    #test_dict = {1: "hi", 2: "test"}
+    #tools.test_mod.test_func(test_dict)
+    #print(tools.test_func(test_dict))
+
+    test_nn = tools.NeuralNetwork(external = 3.3)
+    test_nn.update_internal(1.0)
+    test_nn.update_internal(2)
+    print(test_nn.calculate())
+

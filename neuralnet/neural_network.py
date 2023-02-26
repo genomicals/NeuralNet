@@ -32,11 +32,11 @@ class NeuralNetwork():
         self._generate_network()
 
 
-    def set_weights():
+    def set_weights(self):
         """Updates the weights to the provided values"""
 
 
-    def set_weights_random():
+    def set_weights_random(self):
         """Initalizes the weights to random values"""
 
 
