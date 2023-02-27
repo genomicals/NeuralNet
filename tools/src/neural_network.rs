@@ -30,7 +30,7 @@ impl NeuralNetwork {
 
 
     /// Run the input through the neural network, consider stripping for runtime reasons
-    pub fn calculate(&self, input: &[f32; INPUT_SIZE]) -> Result<[f32; 170], NeuralNetError> {
+    pub fn calculate(&self, input: &[f32; INPUT_SIZE]) -> [f32; 170] {
         let mut output: [f32; 170] = [0.0; 170]; //used for first layer and output
         let mut internal: [f32; 64] = [0.0; 64]; //used for second layer
 
@@ -59,16 +59,16 @@ impl NeuralNetwork {
                 output[i] += internal[j] * self.weights[6272 + i*65 + j] //apply weight to input
             }
             output[i] += self.weights[6272 + i*65 + 64]; //apply bias
-            output[i] = (libm::tanh(output[i] as f64)*0.5 + 1.0) as f32; //apply sigmoid normalization
+            output[i] = (libm::tanh(output[i] as f64)*0.5 + 1.0) as f32; //apply sigmoid normalization, consider tanh for runtime reasons
         }
 
-        Ok(output)
+        output
     }
 
+
     /// Set the weights
-    pub fn set_weights(&mut self, weights: [f32; WEIGHT_SIZE]) -> Result<(), NeuralNetError> {
+    pub fn set_weights(&mut self, weights: [f32; WEIGHT_SIZE]) {
         self.weights = weights;
-        Ok(())
     }
 }
 
