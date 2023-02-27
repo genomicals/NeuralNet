@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 use rand::Rng;
+use libm;
 
 use crate::errors::NeuralNetError;
 
@@ -29,30 +30,45 @@ impl NeuralNetwork {
 
 
     /// Run the input through the neural network, consider stripping for runtime reasons
-    pub fn calculate(&self, input: &[i8]) -> Result<[f32; 170], NeuralNetError> {
-        if input.len() != INPUT_SIZE {
-            return Err(NeuralNetError::InvalidInputSize);
-        } else if self.weights.len() != WEIGHT_SIZE {
-            return Err(NeuralNetError::InvalidWeightSize);
+    pub fn calculate(&self, input: &[f32; INPUT_SIZE]) -> Result<[f32; 170], NeuralNetError> {
+        let mut output: [f32; 170] = [0.0; 170]; //used for first layer and output
+        let mut internal: [f32; 64] = [0.0; 64]; //used for second layer
+
+        // first layer
+        for i in 0..64 { //for each perceptron
+            for j in 0..32 { //for each input
+                output[i] += input[j] * self.weights[i*33 + j]; //apply weight to input
+            }
+            output[i] += self.weights[i*33 + 32]; //apply bias
+            output[i] = libm::tanh(output[i] as f64) as f32; //apply tanh normalization
+        } 
+
+        // second layer
+        for i in 0..64 { //for each perceptron
+            for j in 0..64 { //for each input
+                internal[i] += output[j] * self.weights[2112 + i*65 + j] //apply weight to input
+            }
+            internal[i] += self.weights[2112 + i*65 + 64]; //apply bias
+            internal[i] = libm::tanh(output[i] as f64) as f32; //apply tanh normalization
         }
-        let mut output: [f32; 170] = [0.0; 170];
 
-        
-
-
-
+        //output layer
+        for i in 0..170 { //for each perceptron
+            output[i] = 0.0; //reset the element after being used for layer 1
+            for j in 0..64 { //for each input
+                output[i] += internal[j] * self.weights[6272 + i*65 + j] //apply weight to input
+            }
+            output[i] += self.weights[6272 + i*65 + 64]; //apply bias
+            output[i] = (libm::tanh(output[i] as f64)*0.5 + 1.0) as f32; //apply sigmoid normalization
+        }
 
         Ok(output)
     }
 
     /// Set the weights
     pub fn set_weights(&mut self, weights: [f32; WEIGHT_SIZE]) -> Result<(), NeuralNetError> {
-        if weights.len() != WEIGHT_SIZE {
-            Err(NeuralNetError::InvalidWeightSize)
-        } else {
-            self.weights = weights;
-            Ok(())
-        }
+        self.weights = weights;
+        Ok(())
     }
 }
 
