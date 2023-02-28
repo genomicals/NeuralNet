@@ -3,6 +3,8 @@ use pyo3::prelude::*;
 mod errors;
 mod neural_network;
 mod ai;
+mod files;
+mod generation;
 
 use ai::AI;
 
