@@ -1,8 +1,5 @@
-use pyo3::prelude::*;
 use rand::Rng;
 use libm;
-
-use crate::errors::NeuralNetError;
 
 
 const INPUT_SIZE: usize = 32;
