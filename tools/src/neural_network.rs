@@ -29,6 +29,15 @@ impl NeuralNetwork {
     }
 
 
+    /// Create a new NeuralNetwork from the provided genome
+    pub fn from_genome(genome: &[f32; 17323]) -> Self {
+        let weights: Vec<f32> = Vec::from(&genome[..17322]);
+        let shape = vec![32, 64, 64, 170];
+        NeuralNetwork {shape, weights, max_size: 170}
+
+    }
+
+
     /// Run the input through the neural network, consider stripping for runtime reasons
     pub fn calculate(&self, input: &Vec<f32>) -> Result<Vec<f32>, NeuralNetError> {
         if input.len() != self.shape[0] {

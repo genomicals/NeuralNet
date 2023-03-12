@@ -14,7 +14,7 @@ pub fn load_generation(name: &str) -> Generation {
 
 
 /// Deletes the given generation from the filesystem
-fn remove_generation(name: &str) {
+pub fn remove_generation(name: &str) {
     todo!()
 }
 

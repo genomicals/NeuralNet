@@ -1,11 +1,11 @@
-use pyo3::prelude::*;
-
 mod errors;
 mod neural_network;
 mod ai;
 mod files;
 mod generation;
+mod test;
 
+use pyo3::prelude::*;
 use ai::AI;
 
 
@@ -20,7 +20,7 @@ fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 #[pymodule]
 fn tools(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
-    m.add_class::<AI>()?;
+    //m.add_class::<AI>()?;
     Ok(())
 }
 
