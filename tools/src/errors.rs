@@ -5,6 +5,7 @@ use core::fmt;
 pub enum NeuralNetError {
     InvalidInputSize,
     InvalidWeightSize,
+    ReproMismatchLength,
 }
 impl std::error::Error for NeuralNetError {}
 impl fmt::Display for NeuralNetError {
@@ -12,10 +13,8 @@ impl fmt::Display for NeuralNetError {
         match self {
             Self::InvalidInputSize => write!(f, "Input was not size 32"),
             Self::InvalidWeightSize => write!(f, "Input was not size _"),
+            Self::ReproMismatchLength => write!(f, "The two parents had mismatched length genomens."),
         }
     }
 }
-
-
-
 
