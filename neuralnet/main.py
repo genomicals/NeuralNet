@@ -1,11 +1,15 @@
 import tools
 import ai
-import numpy as np
+#import numpy as np
 
+#to activate venv virtual environment run "source c:/Users/joceb/OneDrive/Documents/WSU/cpts_434/neuralnet/venv/Scripts/activate" in project dir
+#go to first tools dir and run "maturin develop --release"
+#run "python main.py" in second neuralnet dir
 
 
 if __name__ == "__main__":
     print(tools.sum_as_string(1, 3))
+
     #network = nn.NeuralNetwork()
     #test_matrix = np.array([[0, 1, 2, 3], [2, 3, 4]], dtype = object)
 
@@ -20,5 +24,5 @@ if __name__ == "__main__":
     #print(test_nn.external)
     #print(test_nn.internal)
 
-    test_nn = tools.AI()
+    #test_nn = tools.AI()
 
