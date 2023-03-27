@@ -1,13 +1,15 @@
 mod errors;
 mod neural_network;
 mod ai;
+mod architect;
 mod files;
 mod generation;
 mod test;
+mod engine;
 
 use pyo3::prelude::*;
+use architect::Architect;
 use ai::AI;
-
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
