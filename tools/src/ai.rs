@@ -31,6 +31,7 @@ impl AI {
     }
 }
 
+
 /// Generates a new genome from to parents.
 pub fn reproduce(parent0: AI, parent1: AI) -> Result<[f32; 17323], NeuralNetError> {
     if  parent0.genome.len() == parent1.genome.len() {
