@@ -18,3 +18,19 @@ impl fmt::Display for NeuralNetError {
     }
 }
 
+
+/// Custom error type for the checkers engine
+#[derive(Debug)]
+pub enum CheckersError {
+    IllegalMove, 
+}
+impl std::error::Error for CheckersError {}
+impl fmt::Display for CheckersError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::IllegalMove => write!(f, "This move was invalid."),
+        }
+    }
+}
+
+
