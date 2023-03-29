@@ -1,9 +1,21 @@
-use crate::generation::Generation;
+use std::{fs, env};
+use crate::{generation::Generation, errors::NeuralNetError};
 
 
 /// Saves the given generation onto the filesystem
-pub fn save_generation(generation: &Generation, name: &str) {
-    todo!()
+pub fn save_generation(generation: &Generation, name: &str) -> Result<(), NeuralNetError> {
+    let cur = env::current_dir();
+    if let Err(_) = cur {
+        return Err(NeuralNetError::GenerationNotSaved);
+    }
+    let binding = cur.unwrap();
+    let cur_buf = binding.to_str();
+    if let None = cur_buf {
+        return Err(NeuralNetError::GenerationNotSaved);
+    }
+    let cur = cur_buf.unwrap();
+
+    Ok(())
 }
 
 

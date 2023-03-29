@@ -2,16 +2,6 @@
 //red --> positives
 //|1| --> man  |2| --> king  0 --> empty
 
-// for the move function, return a true/false to signify if the move was valid or not
-// - ensure only valid moves are executed on the board
-// - handle automatic moves (if the user can take, then take, but if the user could take 2+ pieces then let the user make a move manually)
-// - track the number of kills and do win detection
-// we probably want more requirements but thats what i thought up real quick
-// ah and i recommend storing the board as a 32-large vector instead of a 64-large because half of those spaces would be unreachable
-// you may decide the interface as you wish and we'll work with it
-
-//use rand::Rng;
-
 use crate::errors::CheckersError;
 
 
@@ -156,7 +146,10 @@ impl Engine {
     
 
     //performs the specified move or defines the error message if the move is invalid
-    pub fn make_move(board: &mut Engine, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
+    pub fn make_move(&mut self, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
+        if !Engine::is_move_valid(&self, tile, action) {
+            return Err(CheckersError::IllegalMove);
+        }
         Ok(CheckersResult::Ok)      
     }
 
@@ -185,3 +178,4 @@ impl Engine {
         //println!("{:?}", self.board);
     }
 }
+

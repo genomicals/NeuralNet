@@ -1,5 +1,4 @@
 import tools
-import ai
 #import numpy as np
 
 #to activate venv virtual environment run "source c:/Users/joceb/OneDrive/Documents/WSU/cpts_434/neuralnet/venv/Scripts/activate" in project dir
@@ -9,6 +8,10 @@ import ai
 
 if __name__ == "__main__":
     print(tools.sum_as_string(1, 3))
+
+    x: list[str] = []
+
+    print(f"Running internal tests: {tools.run_tests()}")
 
     #network = nn.NeuralNetwork()
     #test_matrix = np.array([[0, 1, 2, 3], [2, 3, 4]], dtype = object)
