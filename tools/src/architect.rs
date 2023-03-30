@@ -3,25 +3,26 @@ use crate::{AI, engine, generation::Generation};
 
 pub struct Architect {
     pub generation: Generation,
-    pub fitness: [i32; 1000],
-    pub bracket: [[usize;4];250],
+    pub fitness: Vec<i32>,
+    //pub bracket: [[usize;4];250], //[250] groups of 4 [0,1,2,3] 0-1,0-2,0-3,1-2,1-3,2-3
+    pub bracket: Vec<usize>,
 }
 
 impl Architect {
     // Creates a new Architect.
     pub fn new() -> Self {
         Architect { 
-            generation: Generation{gen_num: 0, ais: [();1000].map(|_| AI::new())},
-            fitness: [0; 1000],
-            bracket: [[0;4];250],
+            generation: Generation{gen_num: 0, ais: (0..1000).map(|_| AI::new()).collect()},
+            fitness: vec![0;1000],
+            bracket: vec![0;1000],
         }    
     }
 
-    // Creates the tournament bracket, for now this is simple assignmeft.
+    // Creates the tournament bracket, for now this is simple assignment.
     pub fn construct_tournament(&mut self) {
         for i in 0..250 {
             for j in 0..4 {
-                self.bracket[i][j] = j*i; 
+                self.bracket[i*4 + j] = j*i; 
             }
         }
         // we can assign a different function if we want true random matches.

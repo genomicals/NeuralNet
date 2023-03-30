@@ -6,7 +6,7 @@ use crate::{neural_network::NeuralNetwork, errors::NeuralNetError};
 //#[pyclass]
 pub struct AI {
     neuralnet: NeuralNetwork,
-    pub genome: [f32; 17323], //weights + biases + mutability
+    pub genome: Vec<f32>, //size 17323, weights + biases + mutability
     //#[pyo3(get, set)]
     //test_int: usize,
 }
@@ -15,7 +15,7 @@ impl AI {
     //#[new]
     /// Create an AI with a randomized genome
     pub fn new() -> Self {
-        let genome = [(); 17323].map(|_| rand::thread_rng().gen_range(-1.0..=1.0));
+        let genome: Vec<f32> = (0..17323).map(|_| rand::thread_rng().gen_range(-1.0..=1.0)).collect();
         AI {
             neuralnet: NeuralNetwork::from_genome(&genome),
             genome: genome,
@@ -23,7 +23,7 @@ impl AI {
     }
 
     /// Create an AI from a genome
-    pub fn with_genome(genome: [f32; 17323]) -> Self {
+    pub fn with_genome(genome: Vec<f32>) -> Self {
         AI {
             neuralnet: NeuralNetwork::from_genome(&genome),
             genome: genome,
@@ -33,11 +33,11 @@ impl AI {
 
 
 /// Generates a new genome from to parents.
-pub fn reproduce(parent0: AI, parent1: AI) -> Result<[f32; 17323], NeuralNetError> {
+pub fn reproduce(parent0: AI, parent1: AI) -> Result<Vec<f32>, NeuralNetError> { //returns size 17323
     if  parent0.genome.len() == parent1.genome.len() {
         //first get the cut_index, which will be the point where we cut the genome for the first parent.
         let cut_index: usize = rand::thread_rng().gen_range(0..17323);
-        let mut genome: [f32; 17323] = [0.0; 17323];
+        let mut genome: Vec<f32> = vec![0.0; 17323];
         let slice0: &[f32];
         let slice1: &[f32];
 

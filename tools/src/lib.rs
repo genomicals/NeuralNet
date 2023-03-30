@@ -28,8 +28,6 @@ fn run_tests() -> PyResult<bool> {
         return Ok(false);
     }
 
-    return Ok(false);
-
     if !test::test_files() {
         return Ok(false);
     }

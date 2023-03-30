@@ -4,35 +4,35 @@ use rand::Rng;
 /// Neural network struct
 pub struct NeuralNetwork {
     /// Weights and biases for every perceptron
-    weights: [f32; 17322],
+    weights: Vec<f32>, //size of 17322
 }
 impl NeuralNetwork {
 
     /// Create a new NeuralNetwork with randomized weights
     pub fn new() -> Self {
-        let weights: [f32; 17322] = [(); 17322].map(|_| rand::thread_rng().gen_range(-2.0..=2.0));
+        let weights: Vec<f32> = (0..17322).map(|_| rand::thread_rng().gen_range(-2.0..=2.0)).collect();
         NeuralNetwork {weights}
     }
 
 
     /// Create a new NeuralNetwork with the provided weights
-    pub fn with_weights(weights: [f32; 17322]) -> Self {
+    pub fn with_weights(weights: Vec<f32>) -> Self {
         NeuralNetwork {weights}
     }
 
 
     /// Create a new NeuralNetwork from the provided genome
-    pub fn from_genome(genome: &[f32; 17323]) -> Self {
-        let mut weights: [f32; 17322] = [0.0; 17322];
+    pub fn from_genome(genome: &Vec<f32>) -> Self { //expects size of 17322
+        let mut weights: Vec<f32>= vec![0.0; 17322];
         weights.copy_from_slice(&genome[..17322]); //copy weights from genome into our neural network
         NeuralNetwork::with_weights(weights)
     }
 
 
     /// Run the input through the neural network, consider stripping for runtime reasons
-    pub fn calculate(&self, input: &[f32; 32]) -> [f32; 170] {
-        let mut output: [f32; 170] = [0.0; 170]; //used for first layer and output
-        let mut internal: [f32; 64] = [0.0; 64]; //used for second layer
+    pub fn calculate(&self, input: Vec<f32>) -> Vec<f32> { //expects input size of 32, returns size of 170
+        let mut output: Vec<f32> = vec![0.0; 170]; //used for first layer and output
+        let mut internal: Vec<f32> = vec![0.0; 64]; //used for second layer
 
         // first layer
         for i in 0..64 { //for each perceptron
@@ -67,7 +67,7 @@ impl NeuralNetwork {
 
 
     /// Set the weights
-    pub fn set_weights(&mut self, weights: [f32; 17322]) {
+    pub fn set_weights(&mut self, weights: Vec<f32>) { //expects size 17322
         self.weights = weights;
     }
 }
