@@ -10,15 +10,16 @@ class CheckersGame:
         self.board_squares = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]
         for row in range(self.board_size):
             for col in range(self.board_size):
-                color = "black" if (row + col) % 2 == 0 else "white"
+                color = "black" if (row + col) % 2 == 0 else "#800000"
                 square = tk.Canvas(self.window, width=50, height=50, bg=color, highlightthickness=0)
                 square.grid(row=row, column=col)
                 self.board_squares[row][col] = square
+                square.create_rectangle(0, 0, 60, 60, width=1, outline="gold")
         
 
         # Add row labels
-        for row in range(self.board_size):
-            label = tk.Label(self.window, text=str(row), font=("Arial", 16))
+        for row in range(self.board_size-1):
+            label = tk.Label(self.window, text=str(self.board_size - row-1), font=("Arial", 16))
             label.grid(row=row, column=0, sticky="nesw")
         # Add column labels
         for col in range(self.board_size-2):
@@ -26,8 +27,8 @@ class CheckersGame:
             label.grid(row=0, column=col+1, sticky="nesw")
         # Add row labels
         for row in range(self.board_size-1):
-            label = tk.Label(self.window, text=str(row+1), font=("Arial", 16))
-            label.grid(row=row+1, column=9, sticky="nesw")
+            label = tk.Label(self.window, text=str(self.board_size - row-1), font=("Arial", 16))
+            label.grid(row=row, column=9, sticky="nesw")
         # Add column labels
         for col in range(self.board_size-2):
             label = tk.Label(self.window, text=chr(ord("A")+col), font=("Arial", 16))
