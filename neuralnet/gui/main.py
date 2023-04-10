@@ -5,7 +5,7 @@ class CheckersGame:
         self.window = tk.Tk()
         self.window.title("Checkers Game")
 
-        # Create checkers board GUI
+        # Create the board 
         self.board_size = 10
         self.board_squares = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]
         for row in range(self.board_size):
@@ -20,35 +20,27 @@ class CheckersGame:
         for row in range(self.board_size):
             label = tk.Label(self.window, text=str(row), font=("Arial", 16))
             label.grid(row=row, column=0, sticky="nesw")
-
         # Add column labels
         for col in range(self.board_size-2):
             label = tk.Label(self.window, text=chr(ord("A")+col), font=("Arial", 16))
             label.grid(row=0, column=col+1, sticky="nesw")
-
-
-
         # Add row labels
         for row in range(self.board_size-1):
             label = tk.Label(self.window, text=str(row+1), font=("Arial", 16))
             label.grid(row=row+1, column=9, sticky="nesw")
-
         # Add column labels
         for col in range(self.board_size-2):
             label = tk.Label(self.window, text=chr(ord("A")+col), font=("Arial", 16))
             label.grid(row=9, column=col+1, sticky="nesw")
 
 
-        
+        #set the corners to background color
         corner00 = tk.Label(self.window, text=str(" "), font=("Arial", 16))
         corner00.grid(row=0, column=0, sticky="nesw")
-
         corner99 = tk.Label(self.window, text=str(" "), font=("Arial", 16))
         corner99.grid(row=9, column=9, sticky="nesw")
-
         corner09 = tk.Label(self.window, text=str(" "), font=("Arial", 16))
         corner09.grid(row=0, column=9, sticky="nesw")
-
         corner90 = tk.Label(self.window, text=str(" "), font=("Arial", 16))
         corner90.grid(row=9, column=0, sticky="nesw")
 
@@ -56,13 +48,14 @@ class CheckersGame:
         menubar = tk.Menu(self.window)
         self.window.config(menu=menubar)
 
-        # Add "File" menu
+        # Add game tab
         Game = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Game", menu=Game)
         Game.add_command(label="New Game", command=self.new_game)
         Game.add_separator()
         Game.add_command(label="Exit", command=self.window.quit)
 
+        #Add generations tab
         Generations = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Generations", menu=Generations)
         Generations.add_command(label="Train Generations", command=self.train_generations)
@@ -78,7 +71,15 @@ class CheckersGame:
         y = (self.window.winfo_screenheight() // 2) - (height // 2)
         self.window.geometry('{}x{}+{}+{}'.format(width, height, x, y))  
 
+    def run(self):
+        self.window.mainloop()
 
+        #utility functions**************************************************************
+
+    def new_game(self):
+        print("Starting a new game...")
+
+        
     def train_generations(self):
          # Create new pop-up window
         popup = tk.Toplevel(self.window)
@@ -144,14 +145,6 @@ class CheckersGame:
         y = (self.window.winfo_screenheight() // 2) - (height // 2)
         popup.geometry('{}x{}+{}+{}'.format(width, height, x, y))  
 
-    
-
-    def new_game(self):
-        print("Starting a new game...")
-
-
-    def run(self):
-        self.window.mainloop()
 
 if __name__ == "__main__":
     game = CheckersGame()
