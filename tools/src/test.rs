@@ -12,6 +12,7 @@ impl TestStruct {
 
 
 pub fn thing_test() -> bool {
+    println!("waddup");
     //let y = TestStruct {x: 3};
     //let x: [f32; 20000] = [(); 20000].map(|_| 0.0);
     //let a = AI::new();
