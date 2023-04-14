@@ -1,3 +1,5 @@
+use std::mem;
+
 use rand::Rng;
 use pyo3::prelude::*;
 use crate::{neural_network::NeuralNetwork, errors::NeuralNetError};
@@ -28,6 +30,23 @@ impl AI {
             neuralnet: NeuralNetwork::from_genome(&genome),
             genome: genome,
         }
+    }
+
+    /// Return the AI's genome as bytes
+    pub fn genome_as_bytes(&self) -> Vec<u8> {
+        let mut vec32 = &self.genome;
+
+        println!("here before");
+        let vec8 = unsafe {
+            let ratio = mem::size_of::<f32>() / mem::size_of::<u8>(); //ratio of the two vector sizes
+            let length = vec32.len() * ratio; //size of the new vector
+            let capacity = vec32.capacity() * ratio; //capacity of the new vector
+            let ptr = vec32.as_ptr() as *mut u8; //get a pointer to the old vector
+            Vec::from_raw_parts(ptr, length, capacity) //construct the new vector of u8's
+        };
+        println!("here after");
+
+        vec8
     }
 }
 

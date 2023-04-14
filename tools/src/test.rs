@@ -43,8 +43,9 @@ pub fn test_files() -> bool {
     let gen = Generation::new();
     let res = files::save_generation(&gen, "test_gen");
     if let Err(_) = res {
+        println!("In the Err");
         return false;
-    } 
+    }
     return true;
 }
 
