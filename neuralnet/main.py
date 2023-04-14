@@ -1,5 +1,5 @@
-import tools
-#import numpy as np
+import "..\\tools"
+#import numpy as np //tools-0.1.0
 
 #to activate venv virtual environment run "source c:/Users/joceb/OneDrive/Documents/WSU/cpts_434/neuralnet/venv/Scripts/activate" in project dir
 #go to first tools dir and run "maturin develop --release"

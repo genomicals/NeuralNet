@@ -1,4 +1,7 @@
-use std::{fs, env, io::Write};
+use std::{fs::{self, File}, env, io::{Write, Read}, path::Path};
+use std::io::BufReader;
+use std::io::prelude::*;
+
 use crate::{generation::Generation, errors::NeuralNetError, ai::AI};
 
 
@@ -34,7 +37,27 @@ pub fn save_generation(generation: &Generation, name: &str) -> Result<(), Neural
 
 /// Loads the specified generation from the filesystem
 pub fn load_generation(name: &str) -> Generation {
-    todo!()
+    if Path::new(name).exists() {
+
+        let file = File::open(name).expect("file wasn't found.");
+        let reader = BufReader::new(file);
+    
+        let numbers: Vec<f32> = reader
+            .lines()
+            .map(|line| line.unwrap().parse::<f32>().unwrap())
+            .collect();
+        let mut loadedAIs : Vec<AI> = Vec::new();
+        for i in 0..1000 {
+            loadedAIs.push(AI::with_genome(numbers[(i*17323)..(i*17323)+17323].to_vec()))
+        }
+        Generation {
+            gen_num: 0,
+            ais: loadedAIs
+        }
+    }
+    else {
+        todo!() // if the file doesn't exist throw error for failing to load from non-existent file.
+    }
 }
 
 

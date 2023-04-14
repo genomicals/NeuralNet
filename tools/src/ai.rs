@@ -48,6 +48,7 @@ impl AI {
 
         vec8
     }
+
 }
 
 
@@ -93,3 +94,15 @@ pub fn reproduce(parent0: AI, parent1: AI) -> Result<Vec<f32>, NeuralNetError> {
         Err(NeuralNetError::ReproMismatchLength)
     }
 }
+
+impl PartialEq for AI {
+    fn eq(&self, other: &Self) -> bool {
+        for i in 0..self.genome.len(){
+            if self.genome[i] != other.genome[i] {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
