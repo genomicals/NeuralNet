@@ -1,23 +1,21 @@
-mod errors;
-mod neural_network;
 mod ai;
 mod architect;
+pub mod engine;
+mod errors;
 mod files;
 mod generation;
+mod neural_network;
 mod test;
-pub mod engine;
 
-use pyo3::prelude::*;
-use architect::Architect;
 use ai::AI;
+use architect::Architect;
+use pyo3::prelude::*;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
 fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
     Ok((a + b).to_string())
 }
-
-
 
 /// Runs internal module tests that cannot be tested by Python
 #[pyfunction]
@@ -35,7 +33,6 @@ fn run_tests() -> PyResult<bool> {
     Ok(true)
 }
 
-
 /// A Python module implemented in Rust.
 #[pymodule]
 fn tools(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -44,4 +41,3 @@ fn tools(_py: Python, m: &PyModule) -> PyResult<()> {
     //m.add_class::<AI>()?;
     Ok(())
 }
-

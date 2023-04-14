@@ -1,8 +1,8 @@
-use std::{fs::{self, File}, env, io::{Write, Read}, path::Path};
-use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::BufReader;
+use std::{env, fs::{self, File}, io::{Read, Write}, path::Path};
 
-use crate::{generation::Generation, errors::NeuralNetError, ai::AI};
+use crate::{ai::AI, errors::NeuralNetError, generation::Generation};
 
 
 /// Saves the given generation onto the filesystem
@@ -36,28 +36,67 @@ pub fn save_generation(generation: &Generation, name: &str) -> Result<(), Neural
 
 
 /// Loads the specified generation from the filesystem
-pub fn load_generation(name: &str) -> Generation {
-    if Path::new(name).exists() {
+pub fn load_generation(name: &str) -> Result<Generation, NeuralNetError> {
+    let cur = env::current_dir(); //grabs current directory
+    if let Err(_) = cur {
+        return Err(NeuralNetError::GenerationNotLoaded); //handles error
+    }
 
-        let file = File::open(name).expect("file wasn't found.");
-        let reader = BufReader::new(file);
+    let binding = cur.unwrap();
+    let cur_buf = binding.to_str();
+    if let None = cur_buf {
+        return Err(NeuralNetError::GenerationNotLoaded); //handles error
+    }
+
+    let cur = String::from(cur_buf.unwrap()); //the current directory as a string
+
+    let gen_file_loc = cur + "/generations" + "/" + name + ".gen"; // The file path to the .gen file
+
+    if !Path::new(&gen_file_loc).exists() {
+        return Err(NeuralNetError::GenFileNotFound); //return error if path doesn't exist
+    }
+
+    let mut file = File::open(gen_file_loc).map_err(|_| NeuralNetError::GenFileNotFound)?;
+    //let reader = BufReader::new(file);
+
+    //let numbers: Vec<f32> = reader
+    //    .lines()
+    //    .map(|line| line.unwrap().parse::<f32>().unwrap())
+    //    .collect();
+    //let numbers = f32::from_be_bytes();
+
+
+    let mut floats = Vec::new();
+    loop {
+        use std::io::ErrorKind;
+        let mut buffer = [0u8; std::mem::size_of::<f32>()]; //size of an f32
+        let res = file.read_exact(&mut buffer); //read from file into res
+        match res {
+            // we detect if we read until the end.
+            // if there were some excess bytes after last read, they are lost.
+            Err(error) if error.kind() == ErrorKind::UnexpectedEof => break,
+            _ => {}
+        }
+        res.map_err(|_| NeuralNetError::GenerationNotLoaded)?; //return errors
+        let f = f32::from_le_bytes(buffer); //assuming little-endian, may switch to big-endian
+        floats.push(f);
+    }
+
+
+
+    // TODO, DO THIS STUFF LATER
+    //let mut buf = vec![0; 17323];
+    //file.read(&mut buf);
+
+    //let genome = AI::genome_from_bytes(&buf);
     
-        let numbers: Vec<f32> = reader
-            .lines()
-            .map(|line| line.unwrap().parse::<f32>().unwrap())
-            .collect();
-        let mut loadedAIs : Vec<AI> = Vec::new();
-        for i in 0..1000 {
-            loadedAIs.push(AI::with_genome(numbers[(i*17323)..(i*17323)+17323].to_vec()))
-        }
-        Generation {
-            gen_num: 0,
-            ais: loadedAIs
-        }
-    }
-    else {
-        todo!() // if the file doesn't exist throw error for failing to load from non-existent file.
-    }
+
+
+
+    Ok(Generation {
+        gen_num: 0,
+        ais: floats.chunks(17323).map(|chunk| AI::with_genome(chunk.to_vec())).collect(),
+    })
 }
 
 
@@ -65,5 +104,3 @@ pub fn load_generation(name: &str) -> Generation {
 pub fn remove_generation(name: &str) {
     todo!()
 }
-
-

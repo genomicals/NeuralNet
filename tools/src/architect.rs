@@ -1,5 +1,5 @@
+use crate::{engine, generation::Generation, AI};
 use std::convert;
-use crate::{AI, engine, generation::Generation};
 
 pub struct Architect {
     pub generation: Generation,
@@ -11,18 +11,21 @@ pub struct Architect {
 impl Architect {
     // Creates a new Architect.
     pub fn new() -> Self {
-        Architect { 
-            generation: Generation{gen_num: 0, ais: (0..1000).map(|_| AI::new()).collect()},
-            fitness: vec![0;1000],
-            bracket: vec![0;1000],
-        }    
+        Architect {
+            generation: Generation {
+                gen_num: 0,
+                ais: (0..1000).map(|_| AI::new()).collect(),
+            },
+            fitness: vec![0; 1000],
+            bracket: vec![0; 1000],
+        }
     }
 
     // Creates the tournament bracket, for now this is simple assignment.
     pub fn construct_tournament(&mut self) {
         for i in 0..250 {
             for j in 0..4 {
-                self.bracket[i*4 + j] = j*i; 
+                self.bracket[i * 4 + j] = j * i;
             }
         }
         // we can assign a different function if we want true random matches.
@@ -30,15 +33,13 @@ impl Architect {
 
     // Runs all the games in bracket order.
     pub fn run_games(&mut self) {
-        for i in 0..250 {
-            
-        }
+        for i in 0..250 {}
     }
 
     // Runs a single game between to AI players and returns their fitness score.
-    pub fn run_game(player1: AI, player2: AI , board : engine::Engine) -> (i32, i32) {
+    pub fn run_game(player1: AI, player2: AI, board: engine::Engine) -> (i32, i32) {
         //
-        return (0,0);
+        return (0, 0);
     }
 
     pub fn determine_survival(&mut self) {
@@ -55,13 +56,8 @@ impl Architect {
         }
         if ofs == 0 {
             // The math worked out nicely and we can move on to elimination and repro normally.
-        }
-        else if ofs < 0 { //Too many marked for elimination.
-            
-        }
-        else if ofs > 0 { // Too few marked for elimination.
-
+        } else if ofs < 0 { //Too many marked for elimination.
+        } else if ofs > 0 { // Too few marked for elimination.
         }
     }
 }
-

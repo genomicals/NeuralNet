@@ -1,15 +1,18 @@
-use crate::{files, generation::{self, Generation}, ai::AI, errors};
-use std::{mem::MaybeUninit, env};
+use crate::{
+    ai::AI,
+    errors, files,
+    generation::{self, Generation},
+};
+use std::{env, mem::MaybeUninit};
 
 struct TestStruct {
     x: i32,
 }
 impl TestStruct {
     pub fn new() -> Self {
-        TestStruct {x: 2}
+        TestStruct { x: 2 }
     }
 }
-
 
 pub fn thing_test() -> bool {
     println!("waddup");
@@ -40,40 +43,34 @@ pub fn thing_test() -> bool {
 
 /// Test the files modules
 pub fn test_files() -> bool {
-
     let gen = Generation::new(); // Create new Generation
-    
+
     let res = files::save_generation(&gen, "test_gen"); // Save the Generation
     if let Err(_) = res {
         println!("In the Err");
         return false;
     }
 
-    let cur = env::current_dir(); //grabs current directory
-    if let Err(_) = cur {
-        //return Err(NeuralNetError::GenerationNotSaved); //handles error
-        return  false;
+    let l_gen = files::load_generation("test_gen"); // Load in the generation.
+    if let Err(e) = l_gen {
+        // received an error instead.
+        println!("{}", e);
+        println!("Received an error from load_generation.");
+        return false;
     }
 
-    let binding = cur.unwrap();
-    let cur_buf = binding.to_str();
-    if let None = cur_buf {
-        //return Err(NeuralNetError::GenerationNotSaved); //handles error
-        return  false;
-    }
+    println!("innit bruv");
 
-    let cur = String::from(cur_buf.unwrap()); //the current directory as a string
-
-    let gen_file_loc = cur + "/generations" + "/" + "test_gen" + ".gen"; // The file path to the .gen file
-
-    let l_gen = files::load_generation(&gen_file_loc); // Load in the generation.
-
+    let l_gen = l_gen.unwrap();
     // check if each of the ai's match.. just in case.
+    //gen.ais.iter().reduce(|acc, e| )
     for i in 0..gen.ais.len() {
         if gen.ais[i] != l_gen.ais[i] {
-            return false
+            println!("Ai #:{} failed", i);
+            println!("{} vs {}", gen.ais[i].genome[0], l_gen.ais[i].genome[0]);
+            return false;
         }
     }
+    println!("bruh");
     return true;
 }
-
