@@ -110,7 +110,7 @@ impl Engine {
         }
     }
 
-    /// Checks if the move can be completed for this player
+    /// Checks if the move can be completed for this player.
     pub fn is_move_valid(&self, tile: u8, action: Action) -> bool {
         let board: &[i8; 32];
         if self.current_player {
@@ -201,9 +201,14 @@ impl Engine {
 
     // TODO Performs the specified move or defines the error message if the move is invalid
     pub fn make_move(&mut self, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
-        if !Engine::is_move_valid(&self, tile, action) {
+        if !Engine::is_move_valid(&self, tile, action) { //ensures coordinates are respected and spaces are open
             return Err(CheckersError::IllegalMove);
         }
+
+        // we need to first perform the move, then take any automatic actions if necessary
+        // question for implementing: if the enemy makes a move, and the player is forced to move,
+        // does this mean their whole turn has completed without them having a say in what they moved?
+        // more research is required
         todo!();
         Ok(CheckersResult::Ok)
     }
