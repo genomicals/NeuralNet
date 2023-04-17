@@ -51,6 +51,8 @@ pub fn test_files() -> bool {
         return false;
     }
 
+    println!("here before loading");
+
     let l_gen = files::load_generation("test_gen"); // Load in the generation.
     if let Err(e) = l_gen {
         // received an error instead.

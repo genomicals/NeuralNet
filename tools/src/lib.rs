@@ -25,10 +25,12 @@ fn run_tests() -> PyResult<bool> {
     if !test::thing_test() {
         return Ok(false);
     }
+    println!("waddup before test_files");
 
     if !test::test_files() {
         return Ok(false);
     }
+    println!("waddup end");
 
     Ok(true)
 }

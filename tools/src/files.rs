@@ -26,10 +26,18 @@ pub fn save_generation(generation: &Generation, name: &str) -> Result<(), Neural
     println!("here");
     println!("size of generation: {}", generation.ais.len());
     for i in 0..generation.ais.len() {
-        println!("on iteration: {}", i);
+        //println!("on iteration: {}", i);
+        if i == 0 {
+            let x = &generation.ais[i].genome_as_bytes();
+            println!("0th: {}", x[0]);
+        }
         gen_file.write_all(&generation.ais[i].genome_as_bytes()); //write the genome for all 1000 AIs
     }
     println!("wow");
+
+    drop(gen_file);
+
+    println!("wow right before");
 
     Ok(())
 }
@@ -64,13 +72,21 @@ pub fn load_generation(name: &str) -> Result<Generation, NeuralNetError> {
     //    .map(|line| line.unwrap().parse::<f32>().unwrap())
     //    .collect();
     //let numbers = f32::from_be_bytes();
+    println!("here");
 
 
+    let mut checked = true;
     let mut floats = Vec::new();
     loop {
         use std::io::ErrorKind;
         let mut buffer = [0u8; std::mem::size_of::<f32>()]; //size of an f32
         let res = file.read_exact(&mut buffer); //read from file into res
+        
+        if checked {
+            checked = false;
+            println!("0th read: {}", buffer[0]);
+        }
+
         match res {
             // we detect if we read until the end.
             // if there were some excess bytes after last read, they are lost.
