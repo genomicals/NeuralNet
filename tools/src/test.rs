@@ -43,8 +43,10 @@ pub fn thing_test() -> bool {
 
 /// Test the files modules
 pub fn test_files() -> bool {
+    println!("here generating a new generation");
     let gen = Generation::new(); // Create new Generation
 
+    println!("here before saving");
     let res = files::save_generation(&gen, "test_gen"); // Save the Generation
     if let Err(_) = res {
         println!("In the Err");

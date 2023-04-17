@@ -199,11 +199,12 @@ impl Engine {
         board[Engine::action_on_tile(tile, action) as usize] == 0 //make sure spot is open
     }
 
-    //performs the specified move or defines the error message if the move is invalid
+    // TODO Performs the specified move or defines the error message if the move is invalid
     pub fn make_move(&mut self, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
         if !Engine::is_move_valid(&self, tile, action) {
             return Err(CheckersError::IllegalMove);
         }
+        todo!();
         Ok(CheckersResult::Ok)
     }
 

@@ -2,7 +2,7 @@ use std::mem;
 
 use crate::{errors::NeuralNetError, neural_network::NeuralNetwork};
 use pyo3::prelude::*;
-use rand::Rng;
+use rand::{Rng, rngs::ThreadRng};
 
 
 /// AI struct
@@ -66,6 +66,21 @@ impl AI {
         vec8
     }
 
+    /// Run the board through the AI, returning a set of sorted moves.
+    pub fn calculate(&self, board: &[i8; 32]) -> Vec<usize> {
+        let converted_board = board.iter().map(|elem| *elem as f32).collect(); //convert the board into a usable input for the neural net
+        let unsorted = self.neuralnet.calculate(converted_board); //do the actual calculation here
+
+        // start sorting the result
+        let mut vals_with_indices: Vec<(f32, usize)> = Vec::with_capacity(unsorted.len());
+        for i in 0..unsorted.len() {
+            vals_with_indices.push((unsorted[i], i));
+        }
+        vals_with_indices.sort_unstable_by(|left, right| left.0.partial_cmp(&right.0).unwrap()); //sort by likeliness
+        
+        vals_with_indices.iter().map(|x| x.1).collect() //return the actions without the likeliness ratings
+    }
+
 
     pub fn genome_from_bytes(bytes: &[u8]) -> Vec<f32> {
 
@@ -94,14 +109,16 @@ impl AI {
 
 
 /// Generates a new genome from to parents.
-pub fn reproduce(parent0: AI, parent1: AI) -> Result<Vec<f32>, NeuralNetError> {
+pub fn reproduce(parent0: &AI, parent1: &AI, rng: &mut ThreadRng) -> Result<Vec<f32>, NeuralNetError> {
     //returns size 17323
     if parent0.genome.len() != parent1.genome.len() {
         return Err(NeuralNetError::ReproMismatchLength);
     }
 
     //first get the cut_index, which will be the point where we cut the genome for the first parent.
-    let cut_index: usize = rand::thread_rng().gen_range(0..17323);
+    //let c = rand::thread_rng();
+    //let cut_index: usize = rand::thread_rng().gen_range(0..17323);
+    let cut_index = rng.gen_range(0..17323);
     let mut genome: Vec<f32> = vec![0.0; 17323];
     let slice0: &[f32];
     let slice1: &[f32];

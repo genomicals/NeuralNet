@@ -1,4 +1,6 @@
-use crate::{engine, generation::Generation, AI};
+use rand::{rngs::ThreadRng, Rng};
+
+use crate::{engine::{self, Engine}, generation::Generation, AI};
 use std::convert;
 
 pub struct Architect {
@@ -6,6 +8,7 @@ pub struct Architect {
     pub fitness: Vec<i32>,
     //pub bracket: [[usize;4];250], //[250] groups of 4 [0,1,2,3] 0-1,0-2,0-3,1-2,1-3,2-3
     pub bracket: Vec<usize>,
+    pub rng: ThreadRng, //using the same engine for rng should increase performance slightly
 }
 
 impl Architect {
@@ -18,6 +21,7 @@ impl Architect {
             },
             fitness: vec![0; 1000],
             bracket: vec![0; 1000],
+            rng: rand::thread_rng(),
         }
     }
 
@@ -36,14 +40,29 @@ impl Architect {
         for i in 0..250 {}
     }
 
-    // Runs a single game between to AI players and returns their fitness score.
-    pub fn run_game(player1: AI, player2: AI, board: engine::Engine) -> (i32, i32) {
-        //
+    // Runs a single game between to AI players and returns their fitness score. Consists of 3 rounds.
+    pub fn run_game(&mut self, player1: &AI, player2: &AI, board: &mut engine::Engine) -> (i32, i32) {
+        let player_decider: bool = self.rng.gen(); //decide if player1 is red or black
+        let game = Engine::new();
+        let p1: &AI;
+        let p2: &AI;
+        if player_decider {
+            p1 = player1;
+            p2 = player2;
+        } else {
+            p1 = player2;
+            p2 = player1;
+        }
+
+        loop {
+            let moves = p1.calculate(game.peak_red());
+        }
+
         return (0, 0);
     }
 
     pub fn determine_survival(&mut self) {
-        let mut fit_clone = self.fitness.clone();
+        let mut fit_clone = self.fitness.clone(); //TODO see if we need to clone this at all, reduce memory
         fit_clone.sort();
         let fitness_metric = fit_clone[fit_clone.len() / 2];
         let mut ofs: i32 = 0;
