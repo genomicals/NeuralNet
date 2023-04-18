@@ -82,6 +82,7 @@ impl AI {
     }
 
 
+    /// Generate a genome from a set of bytes
     pub fn genome_from_bytes(bytes: &[u8]) -> Vec<f32> {
 
 

@@ -17,11 +17,9 @@ pub enum Action {
 }
 
 pub enum CheckersResult {
-    Ok,            //your turn is over with no captures
-    Capture,       //your turn is over with captures
+    Ok,            //turn is over
+    Return,        //same player goes again, either more actions in same turn or the other person's turn was automatically executed
     Win,           //win
-    Return,        //your turn requires more action, with no captures
-    ReturnCapture, //your turn requires more action, with captures
 }
 
 pub struct Engine {
@@ -72,8 +70,49 @@ impl Engine {
         }
     }
 
+    pub fn with_turn(player: bool) -> Self {
+        let mut board = [0; 32];
+
+        // set the red pieces
+        board[0] = 1;
+        board[1] = 1;
+        board[2] = 1;
+        board[3] = 1;
+        board[4] = 1;
+        board[5] = 1;
+        board[6] = 1;
+        board[7] = 1;
+        board[8] = 1;
+        board[10] = 1;
+        board[12] = 1;
+        board[14] = 1;
+
+        // set the black pieces
+        board[17] = -1;
+        board[19] = -1;
+        board[21] = -1;
+        board[23] = -1;
+        board[24] = -1;
+        board[25] = -1;
+        board[26] = -1;
+        board[27] = -1;
+        board[28] = -1;
+        board[29] = -1;
+        board[30] = -1;
+        board[31] = -1;
+
+        Engine {
+            board_red: board.clone(),
+            board_black: board,
+            current_player: player,
+            red_pieces: 12,
+            black_pieces: 12,
+        }
+
+    }
+
     /// Returns the tile a piece would land on given a specific action, can return invalid tiles
-    pub fn action_on_tile(tile: u8, action: Action) -> u8 {
+    pub fn action_on_tile(tile: u8, action: &Action) -> u8 {
         match action {
             Action::MoveNorthwest => {
                 if tile % 2 == 0 {
@@ -111,15 +150,16 @@ impl Engine {
     }
 
     /// Checks if the move can be completed for this player.
-    pub fn is_move_valid(&self, tile: u8, action: Action) -> bool {
-        let board: &[i8; 32];
-        if self.current_player {
-            //red's turn
-            board = &self.board_red;
-        } else {
-            //black's turn
-            board = &self.board_black;
-        }
+    pub fn is_move_valid(&self, tile: u8, action: &Action) -> bool {
+        //let board: &[i8; 32];
+        //if self.current_player {
+        //    //red's turn
+        //    board = &self.board_red;
+        //} else {
+        //    //black's turn
+        //    board = &self.board_black;
+        //}
+        let board = if self.current_player {&self.board_red} else {&self.board_black};
 
         match action {
             Action::MoveNorthwest => {
@@ -163,7 +203,7 @@ impl Engine {
                     //left 2 and top 2 edges
                     return false;
                 }
-                if board[Engine::action_on_tile(tile, Action::MoveNorthwest) as usize] >= 0 {
+                if board[Engine::action_on_tile(tile, &Action::MoveNorthwest) as usize] >= 0 {
                     return false;
                 }
             }
@@ -172,7 +212,7 @@ impl Engine {
                     //right 2 and top 2 edges
                     return false;
                 }
-                if board[Engine::action_on_tile(tile, Action::MoveNortheast) as usize] >= 0 {
+                if board[Engine::action_on_tile(tile, &Action::MoveNortheast) as usize] >= 0 {
                     return false;
                 }
             }
@@ -181,7 +221,7 @@ impl Engine {
                     //left 2 and bottom 2 edges
                     return false;
                 }
-                if board[Engine::action_on_tile(tile, Action::MoveSouthwest) as usize] >= 0 {
+                if board[Engine::action_on_tile(tile, &Action::MoveSouthwest) as usize] >= 0 {
                     return false;
                 }
             }
@@ -190,7 +230,7 @@ impl Engine {
                     //right 2 and bottom 2 edges
                     return false;
                 }
-                if board[Engine::action_on_tile(tile, Action::MoveSoutheast) as usize] >= 0 {
+                if board[Engine::action_on_tile(tile, &Action::MoveSoutheast) as usize] >= 0 {
                     return false;
                 }
             }
@@ -201,7 +241,13 @@ impl Engine {
 
     // TODO Performs the specified move or defines the error message if the move is invalid
     pub fn make_move(&mut self, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
-        if !Engine::is_move_valid(&self, tile, action) { //ensures coordinates are respected and spaces are open
+        let board = if self.current_player {&self.board_red} else {&self.board_black}; //retrieve the board
+
+        if board[tile as usize] <= 0 { //ensures there's a moveable piece on this tile for this player
+            return Err(CheckersError::IllegalMove);
+        }
+
+        if !Engine::is_move_valid(&self, tile, &action) { //ensures coordinates are respected and spaces are open
             return Err(CheckersError::IllegalMove);
         }
 
@@ -209,7 +255,26 @@ impl Engine {
         // question for implementing: if the enemy makes a move, and the player is forced to move,
         // does this mean their whole turn has completed without them having a say in what they moved?
         // more research is required
+
+        // perform the move, NOTE: in move cases the turn will switch to the opponent for sure, not necessarily true for jumps
+        let landing_tile = Engine::action_on_tile(tile, &action);
+        match &action {
+            Action::MoveNorthwest | Action::MoveNortheast | Action::MoveSouthwest | Action::MoveSoutheast => {
+                self.update_board(landing_tile, board[tile as usize]); //copy piece to new tile
+                self.update_board(tile, 0); //remove piece from current tile
+                self.current_player = !self.current_player;
+                return Ok(CheckersResult::Ok);
+            },
+            _ => {
+                // in jump cases, it's possible to chain another move so we have to check it
+                // TODO
+            }
+        }
+
         todo!();
+    
+        
+
         Ok(CheckersResult::Ok)
     }
 
@@ -234,5 +299,10 @@ impl Engine {
     /// Prints the current state of the board, for debugging
     pub fn print_board(&self) {
         //println!("{:?}", self.board);
+    }
+
+    /// TODO Updates both boards at the same time
+    pub fn update_board(&mut self, tile: u8, value: i8) {
+        todo!();
     }
 }
