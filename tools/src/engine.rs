@@ -31,35 +31,38 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new() -> Self {
-        let mut board = [0; 32];
+        //let mut board = [0; 32];
 
-        // set the red pieces
-        board[0] = 1;
-        board[1] = 1;
-        board[2] = 1;
-        board[3] = 1;
-        board[4] = 1;
-        board[5] = 1;
-        board[6] = 1;
-        board[7] = 1;
-        board[8] = 1;
-        board[10] = 1;
-        board[12] = 1;
-        board[14] = 1;
+        //// set the red pieces
+        //board[0] = 1;
+        //board[1] = 1;
+        //board[2] = 1;
+        //board[3] = 1;
+        //board[4] = 1;
+        //board[5] = 1;
+        //board[6] = 1;
+        //board[7] = 1;
+        //board[8] = 1;
+        //board[10] = 1;
+        //board[12] = 1;
+        //board[14] = 1;
 
-        // set the black pieces
-        board[17] = -1;
-        board[19] = -1;
-        board[21] = -1;
-        board[23] = -1;
-        board[24] = -1;
-        board[25] = -1;
-        board[26] = -1;
-        board[27] = -1;
-        board[28] = -1;
-        board[29] = -1;
-        board[30] = -1;
-        board[31] = -1;
+        //// set the black pieces
+        //board[17] = -1;
+        //board[19] = -1;
+        //board[21] = -1;
+        //board[23] = -1;
+        //board[24] = -1;
+        //board[25] = -1;
+        //board[26] = -1;
+        //board[27] = -1;
+        //board[28] = -1;
+        //board[29] = -1;
+        //board[30] = -1;
+        //board[31] = -1;
+
+        let board = [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, -1,0, -1,0, -1,0, -1,-1,-1,-1,-1,-1,-1,-1,-1];
+        //           0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
 
         Engine {
             board_red: board.clone(),
@@ -71,35 +74,8 @@ impl Engine {
     }
 
     pub fn with_turn(player: bool) -> Self {
-        let mut board = [0; 32];
-
-        // set the red pieces
-        board[0] = 1;
-        board[1] = 1;
-        board[2] = 1;
-        board[3] = 1;
-        board[4] = 1;
-        board[5] = 1;
-        board[6] = 1;
-        board[7] = 1;
-        board[8] = 1;
-        board[10] = 1;
-        board[12] = 1;
-        board[14] = 1;
-
-        // set the black pieces
-        board[17] = -1;
-        board[19] = -1;
-        board[21] = -1;
-        board[23] = -1;
-        board[24] = -1;
-        board[25] = -1;
-        board[26] = -1;
-        board[27] = -1;
-        board[28] = -1;
-        board[29] = -1;
-        board[30] = -1;
-        board[31] = -1;
+        let board = [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, -1,0, -1,0, -1,0, -1,-1,-1,-1,-1,-1,-1,-1,-1];
+        //           0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
 
         Engine {
             board_red: board.clone(),
@@ -263,7 +239,8 @@ impl Engine {
                 self.update_board(landing_tile, board[tile as usize]); //copy piece to new tile
                 self.update_board(tile, 0); //remove piece from current tile
                 self.current_player = !self.current_player;
-                return Ok(CheckersResult::Ok);
+                // our turn is finished, look at the enemy team and see if they have any possible automatic moves
+                //return Ok(CheckersResult::Ok);
             },
             _ => {
                 // in jump cases, it's possible to chain another move so we have to check it
@@ -303,6 +280,17 @@ impl Engine {
 
     /// TODO Updates both boards at the same time
     pub fn update_board(&mut self, tile: u8, value: i8) {
-        todo!();
+        let mut board_main;
+        let mut board_secondary;
+        if self.current_player {
+            board_main = self.board_red;
+            board_secondary = self.board_black;
+        } else {
+            board_main = self.board_red;
+            board_secondary = self.board_black;
+        }
+        board_main[tile as usize] = value;
+        board_secondary[31 - tile as usize] = 1 - value;
     }
 }
+
