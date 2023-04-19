@@ -241,16 +241,15 @@ impl Engine {
         possible_moves[2] = self.is_move_valid(directions[2], &Action::JumpNortheast);
         possible_moves[3] = self.is_move_valid(directions[3], &Action::JumpNorthwest);
 
-        //let valid_count = possible_moves.iter().fold(0, |accum, elem| if *elem {accum + 1} else {accum});
-        let valid_count = possible_moves.iter().filter(|elem| **elem).count();
-
-        if valid_count != 1 { //if no automatic moves
+        // get indices of trues
+        let valid_bools: Vec<usize> = possible_moves.iter().enumerate().filter_map(|(i,v)| v.then_some(i)).collect();
+        
+        if valid_bools.len() != 1 {
             return Ok(CheckersResult::Ok(self.current_player)); //ask the AI to make the next move
         }
 
         // we know we need to execute an automatic move
-        let index = possible_moves.iter().position(|elem| *elem).unwrap();
-        match index {
+        match valid_bools[0] {
             0 => return self.make_move(directions[0], Action::JumpSoutheast), //moving from northwest to southeast
             1 => return self.make_move(directions[1], Action::JumpSouthwest), //moving from northeast to southwest
             2 => return self.make_move(directions[2], Action::JumpNortheast), //moving from southwest to northeast
