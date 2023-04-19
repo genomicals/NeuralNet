@@ -4,6 +4,7 @@
 
 use crate::errors::CheckersError;
 
+
 /// Moves that can be taken on a tile
 pub enum Action {
     MoveNorthwest,
@@ -16,12 +17,15 @@ pub enum Action {
     JumpSoutheast,
 }
 
+
+/// The result of making a move on the board
 pub enum CheckersResult {
-    Ok,            //turn is over
-    Return,        //same player goes again, either more actions in same turn or the other person's turn was automatically executed
-    Win,           //win
+    Ok(bool),       //turn is over, contains the current player's turn
+    Win,            //win
 }
 
+
+/// The engine for a Checkers game
 pub struct Engine {
     pub board_red: [i8; 32],
     pub board_black: [i8; 32],
@@ -31,36 +35,6 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new() -> Self {
-        //let mut board = [0; 32];
-
-        //// set the red pieces
-        //board[0] = 1;
-        //board[1] = 1;
-        //board[2] = 1;
-        //board[3] = 1;
-        //board[4] = 1;
-        //board[5] = 1;
-        //board[6] = 1;
-        //board[7] = 1;
-        //board[8] = 1;
-        //board[10] = 1;
-        //board[12] = 1;
-        //board[14] = 1;
-
-        //// set the black pieces
-        //board[17] = -1;
-        //board[19] = -1;
-        //board[21] = -1;
-        //board[23] = -1;
-        //board[24] = -1;
-        //board[25] = -1;
-        //board[26] = -1;
-        //board[27] = -1;
-        //board[28] = -1;
-        //board[29] = -1;
-        //board[30] = -1;
-        //board[31] = -1;
-
         let board = [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, -1,0, -1,0, -1,0, -1,-1,-1,-1,-1,-1,-1,-1,-1];
         //           0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
 
@@ -127,15 +101,11 @@ impl Engine {
 
     /// Checks if the move can be completed for this player.
     pub fn is_move_valid(&self, tile: u8, action: &Action) -> bool {
-        //let board: &[i8; 32];
-        //if self.current_player {
-        //    //red's turn
-        //    board = &self.board_red;
-        //} else {
-        //    //black's turn
-        //    board = &self.board_black;
-        //}
         let board = if self.current_player {&self.board_red} else {&self.board_black};
+
+        if board[tile as usize] <= 0 { //ensures there's a moveable piece on this tile for this player
+            return false;
+        }
 
         match action {
             Action::MoveNorthwest => {
@@ -217,11 +187,7 @@ impl Engine {
 
     // TODO Performs the specified move or defines the error message if the move is invalid
     pub fn make_move(&mut self, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
-        let board = if self.current_player {&self.board_red} else {&self.board_black}; //retrieve the board
-
-        if board[tile as usize] <= 0 { //ensures there's a moveable piece on this tile for this player
-            return Err(CheckersError::IllegalMove);
-        }
+        //let board = if self.current_player {&self.board_red} else {&self.board_black}; //retrieve the board
 
         if !Engine::is_move_valid(&self, tile, &action) { //ensures coordinates are respected and spaces are open
             return Err(CheckersError::IllegalMove);
@@ -236,24 +202,63 @@ impl Engine {
         let landing_tile = Engine::action_on_tile(tile, &action);
         match &action {
             Action::MoveNorthwest | Action::MoveNortheast | Action::MoveSouthwest | Action::MoveSoutheast => {
-                self.update_board(landing_tile, board[tile as usize]); //copy piece to new tile
+                self.update_board(landing_tile, self.get_board()[tile as usize]); //copy piece to new tile
                 self.update_board(tile, 0); //remove piece from current tile
+
+                // CASE I
+                // Give control to the other team, and check the four adjacent spaces for any automatic moves
+                // If only one such case then execute automatically, otherwise ask the ai
                 self.current_player = !self.current_player;
-                // our turn is finished, look at the enemy team and see if they have any possible automatic moves
-                //return Ok(CheckersResult::Ok);
+                return self.handle_inward_jump(landing_tile);
             },
             _ => {
-                // in jump cases, it's possible to chain another move so we have to check it
-                // TODO
+                // CASE II
+                // 1. Check adjacent spaces for additional jumps 
+                //    If any adjacent space has an enemy tile, check the space behind for automatic 
+                //    If only one such open jump then execute automatically, if multiple then ask the ai for a move
+                // 2. After checking for move chain, or move extension, then give control to the other team and essentially do case 1
             }
         }
 
         todo!();
-    
-        
 
-        Ok(CheckersResult::Ok)
+        Ok(CheckersResult::Ok(self.current_player))
     }
+
+
+    /// Checks and executes inward jumps towards the specified tile
+    #[inline]
+    fn handle_inward_jump(&mut self, landing_tile: u8) -> Result<CheckersResult, CheckersError> {
+        let mut possible_moves = [false; 4];
+        let directions = if landing_tile % 2 == 0 { //indices of the spaces around the landing tile
+            [landing_tile - 9, landing_tile - 7, landing_tile - 1, landing_tile + 1]
+        } else {
+            [landing_tile - 1, landing_tile + 1, landing_tile + 7, landing_tile + 9]
+        };
+
+        possible_moves[0] = self.is_move_valid(directions[0], &Action::JumpSoutheast);
+        possible_moves[1] = self.is_move_valid(directions[1], &Action::JumpSouthwest);
+        possible_moves[2] = self.is_move_valid(directions[2], &Action::JumpNortheast);
+        possible_moves[3] = self.is_move_valid(directions[3], &Action::JumpNorthwest);
+
+        //let valid_count = possible_moves.iter().fold(0, |accum, elem| if *elem {accum + 1} else {accum});
+        let valid_count = possible_moves.iter().filter(|elem| **elem).count();
+
+        if valid_count != 1 { //if no automatic moves
+            return Ok(CheckersResult::Ok(self.current_player)); //ask the AI to make the next move
+        }
+
+        // we know we need to execute an automatic move
+        let index = possible_moves.iter().position(|elem| *elem).unwrap();
+        match index {
+            0 => return self.make_move(directions[0], Action::JumpSoutheast), //moving from northwest to southeast
+            1 => return self.make_move(directions[1], Action::JumpSouthwest), //moving from northeast to southwest
+            2 => return self.make_move(directions[2], Action::JumpNortheast), //moving from southwest to northeast
+            3 => return self.make_move(directions[3], Action::JumpNorthwest), //moving from southeast to northwest
+            _ => unreachable!()
+        }
+    }
+
 
     /// Get a reference to the board for red
     pub fn peak_red(&self) -> &[i8; 32] {
@@ -278,7 +283,19 @@ impl Engine {
         //println!("{:?}", self.board);
     }
 
-    /// TODO Updates both boards at the same time
+    /// Get the current board as immutable
+    #[inline]
+    pub fn get_board(&self) -> &[i8; 32] {
+        if self.current_player {&self.board_red} else {&self.board_black} //retrieve the board
+    }
+
+    /// Get the current board as mutable
+    #[inline]
+    pub fn get_board_mut(&mut self) -> &mut [i8; 32] {
+        if self.current_player {&mut self.board_red} else {&mut self.board_black} //retrieve the board
+    }
+
+    /// Updates both boards at the same time
     pub fn update_board(&mut self, tile: u8, value: i8) {
         let mut board_main;
         let mut board_secondary;
@@ -286,8 +303,8 @@ impl Engine {
             board_main = self.board_red;
             board_secondary = self.board_black;
         } else {
-            board_main = self.board_red;
-            board_secondary = self.board_black;
+            board_main = self.board_black;
+            board_secondary = self.board_red;
         }
         board_main[tile as usize] = value;
         board_secondary[31 - tile as usize] = 1 - value;
