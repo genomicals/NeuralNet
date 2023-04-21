@@ -214,18 +214,20 @@ impl Engine {
             _ => {
                 // CASE II
                 // 1. Check adjacent spaces for additional jumps 
-                let outward_result = self.handle_outward_jump(landing_tile);
+                //let outward_result = self.handle_outward_jump(landing_tile);
 
                 //    If any adjacent space has an enemy tile, check the space behind for automatic 
                 //    If only one such open jump then execute automatically, if multiple then ask the ai for a move
                 // 2. After checking for move chain, or move extension, then give control to the other team and essentially do case 1
-                return self.handle_inward_jump(landing_tile);
+                //return self.handle_inward_jump(landing_tile);
+                
+                return self.handle_outward_jump(landing_tile);
             }
         }
 
-        todo!();
+        //todo!();
 
-        Ok(CheckersResult::Ok(self.current_player))
+        //Ok(CheckersResult::Ok(self.current_player))
     }
 
 
@@ -264,23 +266,29 @@ impl Engine {
     // Checks and executes outward jumps for the specified tile. I don't think we need the return here as we always call handle_inward_jump() after.
     fn handle_outward_jump(&mut self, landing_tile: u8) -> Result<CheckersResult, CheckersError>{
         let mut possible_moves = [false; 4];
+        possible_moves[3] = self.is_move_valid(landing_tile, &Action::JumpNorthwest);
         possible_moves[0] = self.is_move_valid(landing_tile, &Action::JumpSoutheast);
         possible_moves[1] = self.is_move_valid(landing_tile, &Action::JumpSouthwest);
         possible_moves[2] = self.is_move_valid(landing_tile, &Action::JumpNortheast);
-        possible_moves[3] = self.is_move_valid(landing_tile, &Action::JumpNorthwest);
 
         let valid_bools: Vec<usize> = possible_moves.iter().enumerate().filter_map(|(i,v)| v.then_some(i)).collect();
+
+        if valid_bools.len() == 0 {
+            // turn is over, check automatic moves for enemy
+            self.current_player = !self.current_player; //
+            return self.handle_inward_jump(landing_tile); //handle inward jumping
+        }
         
-        if valid_bools.len() != 1 {
+        if valid_bools.len() > 1 {
             return Ok(CheckersResult::Ok(self.current_player)); //ask the AI to make the next move
         }
         
         // we know we need to execute an automatic move
         match valid_bools[0] {
-            0 => return self.make_move(landing_tile, Action::JumpSoutheast), //moving from northwest to southeast
-            1 => return self.make_move(landing_tile, Action::JumpSouthwest), //moving from northeast to southwest
             2 => return self.make_move(landing_tile, Action::JumpNortheast), //moving from southwest to northeast
             3 => return self.make_move(landing_tile, Action::JumpNorthwest), //moving from southeast to northwest
+            0 => return self.make_move(landing_tile, Action::JumpSoutheast), //moving from northwest to southeast
+            1 => return self.make_move(landing_tile, Action::JumpSouthwest), //moving from northeast to southwest
             _ => unreachable!()
         }
     }
