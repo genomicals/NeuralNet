@@ -9,8 +9,8 @@ import tools
 if __name__ == "__main__":
     print(tools.sum_as_string(1, 3))
 
-    test_obj = tools.GameManager(4)
-    test_obj1 = tools.GenerationManager(2)
+    test_obj = tools.GameManager()
+    test_obj1 = tools.GenerationManager()
     return_num = test_obj.make_move(5, 2)
     print(return_num)
 

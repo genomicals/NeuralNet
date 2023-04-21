@@ -50,7 +50,7 @@ struct GenerationManager {
 #[pymethods]
 impl GenerationManager {
     #[new]
-    fn new(external: f32) -> Self {
+    fn new() -> Self {
         GenerationManager {test_num: 56.0}
     }
 
@@ -75,7 +75,7 @@ struct GameManager {
 #[pymethods]
 impl GameManager {
     #[new]
-    fn new(external: f32) -> Self {
+    fn new() -> Self {
         GameManager {test_num1: 0.0}
     }
 
