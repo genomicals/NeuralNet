@@ -266,10 +266,10 @@ impl Engine {
     // Checks and executes outward jumps for the specified tile. I don't think we need the return here as we always call handle_inward_jump() after.
     fn handle_outward_jump(&mut self, landing_tile: u8) -> Result<CheckersResult, CheckersError>{
         let mut possible_moves = [false; 4];
-        possible_moves[3] = self.is_move_valid(landing_tile, &Action::JumpNorthwest);
-        possible_moves[0] = self.is_move_valid(landing_tile, &Action::JumpSoutheast);
-        possible_moves[1] = self.is_move_valid(landing_tile, &Action::JumpSouthwest);
-        possible_moves[2] = self.is_move_valid(landing_tile, &Action::JumpNortheast);
+        possible_moves[0] = self.is_move_valid(landing_tile, &Action::JumpNorthwest);
+        possible_moves[1] = self.is_move_valid(landing_tile, &Action::JumpNortheast);
+        possible_moves[2] = self.is_move_valid(landing_tile, &Action::JumpSouthwest);
+        possible_moves[3] = self.is_move_valid(landing_tile, &Action::JumpSoutheast);
 
         let valid_bools: Vec<usize> = possible_moves.iter().enumerate().filter_map(|(i,v)| v.then_some(i)).collect();
 
@@ -285,10 +285,10 @@ impl Engine {
         
         // we know we need to execute an automatic move
         match valid_bools[0] {
-            2 => return self.make_move(landing_tile, Action::JumpNortheast), //moving from southwest to northeast
-            3 => return self.make_move(landing_tile, Action::JumpNorthwest), //moving from southeast to northwest
-            0 => return self.make_move(landing_tile, Action::JumpSoutheast), //moving from northwest to southeast
-            1 => return self.make_move(landing_tile, Action::JumpSouthwest), //moving from northeast to southwest
+            0 => return self.make_move(landing_tile, Action::JumpNorthwest), //moving from southeast to northwest
+            1 => return self.make_move(landing_tile, Action::JumpNortheast), //moving from southwest to northeast
+            2 => return self.make_move(landing_tile, Action::JumpSouthwest), //moving from northeast to southwest
+            3 => return self.make_move(landing_tile, Action::JumpSoutheast), //moving from northwest to southeast
             _ => unreachable!()
         }
     }
