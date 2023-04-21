@@ -92,8 +92,9 @@ impl GameManager {
     }
 
     /// Returns the current board as a list TODO need to figure out how to create and return python lists
-    fn peak_board(self_: PyRef<'_, Self>) {
-        todo!();
+    fn peak_board(self_: PyRef<'_, Self>) -> [i8; 32] {
+        //todo!();
+        return [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2];
     }
 }
 
