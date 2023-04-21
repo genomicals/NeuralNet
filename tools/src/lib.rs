@@ -23,20 +23,20 @@ fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 
 /// Runs internal module tests that cannot be tested by Python
 #[pyfunction]
-fn run_tests() -> PyResult<bool> {
+fn run_tests() -> bool {
     let result: bool;
 
     if !test::thing_test() {
-        return Ok(false);
+        return false;
     }
     println!("waddup before test_files");
 
     if !test::test_files() {
-        return Ok(false);
+        return false;
     }
     println!("waddup end");
 
-    Ok(true)
+    true
 }
 
 
@@ -55,12 +55,12 @@ impl GenerationManager {
     }
 
     /// Trains the AI for a certain number of generations
-    fn train_generations(&mut self, num_generations: usize) {
+    fn train_generations(self_: PyRef<'_, Self>, num_generations: usize) {
         todo!();
     }
 
     /// Starts a game with the current best AI
-    fn start_game(&mut self) -> GameManager {
+    fn start_game(self_: PyRef<'_, Self>) -> GameManager {
         todo!();
     }
 }
@@ -80,17 +80,19 @@ impl GameManager {
     }
 
     /// Initialize a new game
-    fn new_game(&mut self) {
+    fn new_game(self_: PyRef<'_, Self>) {
 
     }
 
     /// Makes the current player's move
-    fn make_move(&mut self, tile: u32, action: u32) -> i32 {
-        todo!();
+    pub fn make_move(self_: PyRef<'_, Self>, tile: u32, action: u32) -> i32 {
+        // mut self_: PyRefMut<'_, Self>
+        //todo!();
+        return 5;
     }
 
     /// Returns the current board as a list TODO need to figure out how to create and return python lists
-    fn peak_board(&mut self) {
+    fn peak_board(self_: PyRef<'_, Self>) {
         todo!();
     }
 }
