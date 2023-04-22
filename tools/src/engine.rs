@@ -21,7 +21,7 @@ pub enum Action {
 /// The result of making a move on the board
 pub enum CheckersResult {
     Ok(bool),       //turn is over, contains the current player's turn
-    Win,            //win
+    Win(bool),            //win
 }
 
 
@@ -41,20 +41,7 @@ impl Engine {
         Engine {
             board_red: board.clone(),
             board_black: board,
-            current_player: true,
-            red_pieces: 12,
-            black_pieces: 12,
-        }
-    }
-
-    pub fn with_turn(player: bool) -> Self {
-        let board = [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, -1,0, -1,0, -1,0, -1,-1,-1,-1,-1,-1,-1,-1,-1];
-        //           0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
-
-        Engine {
-            board_red: board.clone(),
-            board_black: board,
-            current_player: player,
+            current_player: false,
             red_pieces: 12,
             black_pieces: 12,
         }
@@ -100,15 +87,20 @@ impl Engine {
 
     /// Checks if the move can be completed for this player.
     pub fn is_move_valid(&self, tile: u8, action: &Action) -> bool {
-        let board = if self.current_player {&self.board_red} else {&self.board_black};
+        if tile > 31 {
+            return false;
+        }
 
-        if board[tile as usize] <= 0 { //ensures there's a moveable piece on this tile for this player
+        let board = if self.current_player {&self.board_red} else {&self.board_black};
+        let piece = board[tile as usize];
+
+        if piece <= 0 { //ensures there's a moveable piece on this tile for this player
             return false;
         }
 
         match action {
             Action::MoveNorthwest => {
-                if (tile % 2 == 0) && (tile % 8 == 0 || tile < 8) {
+                if (tile % 2 == 0) && (tile % 8 == 0 || tile < 8) { 
                     return false;
                 } //left and top edge
             }
@@ -127,7 +119,7 @@ impl Engine {
             }
             Action::MoveSouthwest => {
                 if tile % 2 == 0 {
-                    if tile % 8 == 0 {
+                    if tile % 8 == 0 || piece == 1 {
                         return false;
                     }
                 }
@@ -139,7 +131,7 @@ impl Engine {
                 } //bottom edge
             }
             Action::MoveSoutheast => {
-                if (tile % 2 == 1) && (tile > 23 || ((tile + 1) % 8 == 0)) {
+                if (tile % 2 == 1) && (tile > 23 || ((tile + 1) % 8 == 0)) || piece == 1 {
                     return false;
                 } //right and bottom edge
             }
@@ -162,7 +154,7 @@ impl Engine {
                 }
             }
             Action::JumpSouthwest => {
-                if (tile > 23) || (tile % 8 == 0) || ((tile - 1) % 8 == 0) {
+                if (tile > 23) || (tile % 8 == 0) || ((tile - 1) % 8 == 0) || piece == 1 {
                     //left 2 and bottom 2 edges
                     return false;
                 }
@@ -171,7 +163,7 @@ impl Engine {
                 }
             }
             Action::JumpSoutheast => {
-                if (tile > 23) || ((tile + 1) % 8 == 0) || ((tile + 2) % 8 == 0) {
+                if (tile > 23) || ((tile + 1) % 8 == 0) || ((tile + 2) % 8 == 0) || piece == 1 {
                     //right 2 and bottom 2 edges
                     return false;
                 }
@@ -203,6 +195,7 @@ impl Engine {
             Action::MoveNorthwest | Action::MoveNortheast | Action::MoveSouthwest | Action::MoveSoutheast => {
                 self.update_board(landing_tile, self.get_board()[tile as usize]); //copy piece to new tile
                 self.update_board(tile, 0); //remove piece from current tile
+                self.handle_king(landing_tile); //update to king after the move
 
                 // CASE I
                 // Give control to the other team, and check the four adjacent spaces for any automatic moves
@@ -210,29 +203,61 @@ impl Engine {
                 self.current_player = !self.current_player;
                 return self.handle_inward_jump(landing_tile);
             },
-            _ => {
-                // CASE II
-                // Check adjacent spaces for additional jumps 
-                return self.handle_outward_jump(landing_tile);
-            }
+            Action::JumpNorthwest => {
+                let killed_tile = Engine::action_on_tile(tile, &Action::MoveNorthwest);
+                self.update_board(killed_tile, 0); //delete killed piece
+            },
+            Action::JumpNortheast => {
+                let killed_tile = Engine::action_on_tile(tile, &Action::MoveNortheast);
+                self.update_board(killed_tile, 0); //delete killed piece
+            },
+            Action::JumpSouthwest => {
+                let killed_tile = Engine::action_on_tile(tile, &Action::MoveSouthwest);
+                self.update_board(killed_tile, 0); //delete killed piece
+            },
+            Action::JumpSoutheast => {
+                let killed_tile = Engine::action_on_tile(tile, &Action::MoveSoutheast);
+                self.update_board(killed_tile, 0); //delete killed piece
+            },
         }
-    }
+        // CASE II
+        // Check adjacent spaces for additional jumps 
 
+        if self.current_player {self.black_pieces -= 1;} else {self.red_pieces -= 1;} //update piece count
+        if self.black_pieces == 0 || self.red_pieces == 0 {return Ok(CheckersResult::Win(self.current_player));} //check win
+        self.update_board(landing_tile, self.get_board()[tile as usize]); //copy piece to new tile
+        self.update_board(tile, 0); //remove piece from current tile
+        self.handle_king(landing_tile); //upgrade to king before checking for more jumps
+        return self.handle_outward_jump(landing_tile);
+    }
 
     /// Checks and executes inward jumps towards the specified tile
     #[inline]
     fn handle_inward_jump(&mut self, landing_tile: u8) -> Result<CheckersResult, CheckersError> {
         let mut possible_moves = [false; 4];
-        let directions = if landing_tile % 2 == 0 { //indices of the spaces around the landing tile
-            [landing_tile - 9, landing_tile - 7, landing_tile - 1, landing_tile + 1]
-        } else {
-            [landing_tile - 1, landing_tile + 1, landing_tile + 7, landing_tile + 9]
-        };
+        //let directions = if landing_tile % 2 == 0 { //indices of the spaces around the landing tile
+        //    [landing_tile - 9, landing_tile - 7, landing_tile - 1, landing_tile + 1]
+        //} else {
+        //    [landing_tile - 1, landing_tile + 1, landing_tile + 7, landing_tile + 9]
+        //};
 
-        possible_moves[0] = self.is_move_valid(directions[0], &Action::JumpSoutheast);
-        possible_moves[1] = self.is_move_valid(directions[1], &Action::JumpSouthwest);
-        possible_moves[2] = self.is_move_valid(directions[2], &Action::JumpNortheast);
-        possible_moves[3] = self.is_move_valid(directions[3], &Action::JumpNorthwest);
+        //possible_moves[0] = self.is_move_valid(directions[0], &Action::JumpSoutheast);
+        //possible_moves[1] = self.is_move_valid(directions[1], &Action::JumpSouthwest);
+        //possible_moves[2] = self.is_move_valid(directions[2], &Action::JumpNortheast);
+        //possible_moves[3] = self.is_move_valid(directions[3], &Action::JumpNorthwest);
+
+        let mut directions: [u8; 4] = [0; 4];
+        if landing_tile % 2 == 0 {
+            possible_moves[0] = if landing_tile < 9  {false} else {directions[0] = landing_tile - 9; self.is_move_valid(directions[0], &Action::JumpSoutheast)};
+            possible_moves[1] = if landing_tile < 7  {false} else {directions[1] = landing_tile - 7; self.is_move_valid(directions[1], &Action::JumpSoutheast)};
+            possible_moves[2] = if landing_tile < 1  {false} else {directions[2] = landing_tile - 1; self.is_move_valid(directions[2], &Action::JumpSoutheast)};
+            possible_moves[3] = if landing_tile > 30 {false} else {directions[3] = landing_tile + 1; self.is_move_valid(directions[3], &Action::JumpSoutheast)};
+        } else {
+            possible_moves[0] = if landing_tile < 1  {false} else {directions[0] = landing_tile - 1; self.is_move_valid(directions[0], &Action::JumpSoutheast)};
+            possible_moves[1] = if landing_tile > 30 {false} else {directions[1] = landing_tile + 1; self.is_move_valid(directions[1], &Action::JumpSoutheast)};
+            possible_moves[2] = if landing_tile > 24 {false} else {directions[2] = landing_tile + 7; self.is_move_valid(directions[2], &Action::JumpSoutheast)};
+            possible_moves[3] = if landing_tile > 22 {false} else {directions[3] = landing_tile + 9; self.is_move_valid(directions[3], &Action::JumpSoutheast)};
+        }
 
         // get indices of trues
         let valid_bools: Vec<usize> = possible_moves.iter().enumerate().filter_map(|(i,v)| v.then_some(i)).collect();
@@ -279,6 +304,14 @@ impl Engine {
             2 => return self.make_move(landing_tile, Action::JumpSouthwest), //moving from northeast to southwest
             3 => return self.make_move(landing_tile, Action::JumpSoutheast), //moving from northwest to southeast
             _ => unreachable!()
+        }
+    }
+
+    /// Decides whether or not to king a piece
+    pub fn handle_king(&mut self, tile: u8) {
+        let board = if self.current_player {self.board_red} else {self.board_black};
+        if tile < 7 && tile % 2 == 0 && board[tile as usize] == 1 {
+            self.update_board(tile, 2);
         }
     }
 

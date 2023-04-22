@@ -89,7 +89,7 @@ impl Architect {
     /// Runs a single game between to AI players and returns their fitness score.
     pub fn run_game(player1: &AI, player2: &AI, rng: &mut ThreadRng) -> (i32, i32) {
         let player_decider: bool = rng.gen(); //decide if player1 is red or black
-        let game = Engine::new(); //by default red will start
+        let mut game = Engine::new(); //by default black will start
         let p1: &AI;
         let p2: &AI;
         if player_decider {
@@ -100,17 +100,56 @@ impl Architect {
             p2 = player1;
         }
 
+        let mut scores = [0, 0]; //red, black
+
         // main game loop
-        let mut cur_turn = true;
+        let mut cur_turn = false;
         'turn_loop: loop {
-            let moves = p1.calculate(game.peak_red()); //output of the neural network
+
+            // retrieve output of neural network
+            let moves = if cur_turn {
+                p1.calculate(game.peak_red())
+            } else {
+                p2.calculate(game.peak_black())
+            };
+
+            let mut current_penalty = 0;
+
+            // find the first valid move
             for cur in moves {
                 let (tile, action) = Architect::index_to_move(cur);
-                
+                let result = game.make_move(tile, action);
+                if let Ok(asdf) = result { //if the move went smoothly
+                    if cur_turn {scores[0] += current_penalty;} else {scores[1] += current_penalty;} //update penalties
+                    match asdf {
+                        engine::CheckersResult::Ok(turn) => {
+                            cur_turn = turn;
+                            continue 'turn_loop;
+                        },
+                        engine::CheckersResult::Win(winner) => {
+                            cur_turn = winner;
+                            break 'turn_loop;
+                        }
+                    }
+                }
+
+                // move did not go smoothly
+                current_penalty -= 1;
             }
+            // none of the moves worked, so other player must have won (either by getting trapped or literally having no pieces)
+            cur_turn = !cur_turn;
+            break 'turn_loop;
         }
 
-        return (0, 0);
+        if cur_turn { //red won
+            scores[0] += 10;
+            scores[1] -= 10;
+        } else { //black won
+            scores[0] -= 10;
+            scores[1] += 10;
+        }
+
+        if player_decider {(scores[0], scores[1])} else {(scores[1], scores[0])}
     }
 
     /// Converts an index (0 through 169) into a tile and action
