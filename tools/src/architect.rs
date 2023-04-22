@@ -98,9 +98,227 @@ impl Architect {
         return (0, 0);
     }
 
-    /// asdf
+    /// Converts an index (0 through 169) into a tile and action
     #[inline]
-    pub fn index_to_move(cur: usize) -> (u8, Action) {
+    pub fn index_to_move(index: usize) -> (u8, Action) {
+        //[a,b,c,d,e,f,g,h]
+        // abcde = tile // fgh = action
+        //let temp = index & 1111-1000 -> first 5 bits
+        //let u8
+        //[0...n] //northwest slide
+        //[n...m] //northeast slide
+        //[n...m] //southwest slide
+        //[n...m] //southeast slide
+        //[n...m] //northwest jump
+        //[n...m] //northeast jump
+        //[n...m] //southwest jump
+        //[n..170] //southeast jump
+
+        match index {
+            0 => (0, Action::MoveSoutheast),
+            1 => (0, Action::JumpSoutheast),
+
+            2 => (1, Action::MoveNorthwest),
+            3 => (1, Action::MoveNortheast),
+            4 => (1, Action::MoveSouthwest),
+            5 => (1, Action::MoveSoutheast),
+            6 => (1, Action::JumpSoutheast),
+
+            7 => (2, Action::MoveSouthwest),
+            8 => (2, Action::MoveSoutheast),
+            9 => (2, Action::JumpSouthwest),
+            10 => (2, Action::JumpSoutheast),
+
+            11 => (3, Action::MoveNorthwest),
+            12 => (3, Action::MoveNortheast),
+            13 => (3, Action::MoveSouthwest),
+            14 => (3, Action::MoveSoutheast),
+            15 => (3, Action::JumpSouthwest),
+            16 => (3, Action::JumpSoutheast),
+            
+            17 => (4, Action::MoveSouthwest),
+            18 => (4, Action::MoveSoutheast),
+            19 => (4, Action::JumpSouthwest),
+            20 => (4, Action::JumpSoutheast),
+
+            21 => (5, Action::MoveNorthwest),
+            22 => (5, Action::MoveNortheast),
+            23 => (5, Action::MoveSouthwest),
+            24 => (5, Action::MoveSoutheast),
+            25 => (5, Action::JumpSouthwest),
+            26 => (5, Action::JumpSoutheast),
+
+            27 => (6, Action::MoveSouthwest),
+            28 => (6, Action::MoveSoutheast),
+            29 => (6, Action::JumpSouthwest),
+
+            30 => (7, Action::MoveNorthwest),
+            31 => (7, Action::MoveSouthwest),
+            32 => (7, Action::JumpSouthwest),
+
+            33 => (8, Action::MoveNortheast),
+            34 => (8, Action::MoveSoutheast),
+            35 => (8, Action::JumpNortheast),
+            36 => (8, Action::JumpSoutheast),
+
+            37 => (9, Action::MoveNorthwest),
+            38 => (9, Action::MoveNortheast),
+            39 => (9, Action::MoveSouthwest),
+            40 => (9, Action::MoveSoutheast),
+            41 => (9, Action::JumpNortheast),
+            42 => (9, Action::JumpSoutheast),
+
+            43 => (10, Action::MoveNorthwest),
+            44 => (10, Action::MoveNortheast),
+            45 => (10, Action::MoveSouthwest),
+            46 => (10, Action::MoveSoutheast),
+            47 => (10, Action::JumpNorthwest),
+            48 => (10, Action::JumpNortheast),
+            49 => (10, Action::JumpSouthwest),
+            50 => (10, Action::JumpSoutheast),
+
+            51 => (11, Action::MoveNorthwest),
+            52 => (11, Action::MoveNortheast),
+            53 => (11, Action::MoveSouthwest),
+            54 => (11, Action::MoveSoutheast),
+            55 => (11, Action::JumpNorthwest),
+            56 => (11, Action::JumpNortheast),
+            57 => (11, Action::JumpSouthwest),
+            58 => (11, Action::JumpSoutheast),
+
+            59 => (12, Action::MoveNorthwest),
+            60 => (12, Action::MoveNortheast),
+            61 => (12, Action::MoveSouthwest),
+            62 => (12, Action::MoveSoutheast),
+            63 => (12, Action::JumpNorthwest),
+            64 => (12, Action::JumpNortheast),
+            65 => (12, Action::JumpSouthwest),
+            66 => (12, Action::JumpSoutheast),
+
+            67 => (13, Action::MoveNorthwest),
+            68 => (13, Action::MoveNortheast),
+            69 => (13, Action::MoveSouthwest),
+            70 => (13, Action::MoveSoutheast),
+            71 => (13, Action::JumpNorthwest),
+            72 => (13, Action::JumpNortheast),
+            73 => (13, Action::JumpSouthwest),
+            74 => (13, Action::JumpSoutheast),
+
+            75 => (14, Action::MoveNorthwest),
+            76 => (14, Action::MoveNortheast),
+            77 => (14, Action::MoveSouthwest),
+            78 => (14, Action::MoveSoutheast),
+            79 => (14, Action::JumpNorthwest),
+            80 => (14, Action::JumpSouthwest),
+
+            81 => (15, Action::MoveNorthwest),
+            82 => (15, Action::MoveSouthwest),
+            83 => (15, Action::JumpNorthwest),
+            84 => (15, Action::JumpSouthwest),
+
+            85 => (16, Action::MoveNortheast),
+            86 => (16, Action::MoveSoutheast),
+            87 => (16, Action::JumpNortheast),
+            88 => (16, Action::JumpSoutheast),
+            
+            89 => (17, Action::MoveNorthwest),
+            90 => (17, Action::MoveNortheast),
+            91 => (17, Action::MoveSouthwest),
+            92 => (17, Action::MoveSoutheast),
+            93 => (17, Action::JumpNortheast),
+            94 => (17, Action::JumpSoutheast),
+            
+            95 => (18, Action::MoveNorthwest),
+            96 => (18, Action::MoveNortheast),
+            97 => (18, Action::MoveSouthwest),
+            98 => (18, Action::MoveSoutheast),
+            99 => (18, Action::JumpNorthwest),
+            100 => (18, Action::JumpNortheast),
+            101 => (18, Action::JumpSouthwest),
+            102 => (18, Action::JumpSoutheast),
+            
+            103 => (19, Action::MoveNorthwest),
+            104 => (19, Action::MoveNortheast),
+            105 => (19, Action::MoveSouthwest),
+            106 => (19, Action::MoveSoutheast),
+            107 => (19, Action::JumpNorthwest),
+            108 => (19, Action::JumpNortheast),
+            109 => (19, Action::JumpSouthwest),
+            110 => (19, Action::JumpSoutheast),
+            
+            111 => (20, Action::MoveNorthwest),
+            112 => (20, Action::MoveNortheast),
+            113 => (20, Action::MoveSouthwest),
+            114 => (20, Action::MoveSoutheast),
+            115 => (20, Action::JumpNorthwest),
+            116 => (20, Action::JumpNortheast),
+            117 => (20, Action::JumpSouthwest),
+            118 => (20, Action::JumpSoutheast),
+            
+            119 => (21, Action::MoveNorthwest),
+            120 => (21, Action::MoveNortheast),
+            121 => (21, Action::MoveSouthwest),
+            122 => (21, Action::MoveSoutheast),
+            123 => (21, Action::JumpNorthwest),
+            124 => (21, Action::JumpNortheast),
+            125 => (21, Action::JumpSouthwest),
+            126 => (21, Action::JumpSoutheast),
+            
+            127 => (22, Action::MoveNorthwest),
+            128 => (22, Action::MoveNortheast),
+            129 => (22, Action::MoveSouthwest),
+            130 => (22, Action::MoveSoutheast),
+            131 => (22, Action::JumpNorthwest),
+            132 => (22, Action::JumpSouthwest),
+            
+            133 => (23, Action::MoveNorthwest),
+            134 => (23, Action::MoveSouthwest),
+            135 => (23, Action::JumpNorthwest),
+            136 => (23, Action::JumpSouthwest),
+            
+            137 => (24, Action::MoveNortheast),
+            138 => (24, Action::MoveSoutheast),
+            139 => (24, Action::JumpNortheast),
+            
+            140 => (25, Action::MoveNorthwest),
+            141 => (25, Action::MoveNortheast),
+            142 => (25, Action::JumpNortheast),
+            
+            143 => (26, Action::MoveNorthwest),
+            144 => (26, Action::MoveNortheast),
+            145 => (26, Action::MoveSouthwest),
+            146 => (26, Action::MoveSoutheast),
+            147 => (26, Action::JumpNorthwest),
+            148 => (26, Action::JumpNortheast),
+            
+            149 => (27, Action::MoveNorthwest),
+            150 => (27, Action::MoveNortheast),
+            151 => (27, Action::JumpNorthwest),
+            152 => (27, Action::JumpNortheast),
+            
+            153 => (28, Action::MoveNorthwest),
+            154 => (28, Action::MoveNortheast),
+            155 => (28, Action::MoveSouthwest),
+            156 => (28, Action::MoveSoutheast),
+            157 => (28, Action::JumpNorthwest),
+            158 => (28, Action::JumpNortheast),
+            
+            159 => (29, Action::MoveNorthwest),
+            160 => (29, Action::MoveNortheast),
+            161 => (29, Action::JumpNorthwest),
+            162 => (29, Action::JumpNortheast),
+            
+            163 => (30, Action::MoveNorthwest),
+            164 => (30, Action::MoveNortheast),
+            165 => (30, Action::MoveSouthwest),
+            166 => (30, Action::MoveSoutheast),
+            167 => (30, Action::JumpNorthwest),
+            
+            168 => (31, Action::MoveNorthwest),
+            169 => (31, Action::JumpNorthwest),
+
+            _ => unreachable!(),
+        }
 
     }
 
