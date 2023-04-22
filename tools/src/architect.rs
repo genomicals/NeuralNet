@@ -1,78 +1,92 @@
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::{engine::{self, Engine, Action}, generation::Generation, AI};
-use std::convert;
+use std::{convert, sync::{Arc, Mutex}, borrow::Borrow, thread};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
 pub struct Architect {
-    pub generation: Generation,
-    pub fitness: Vec<i32>,
-    //pub bracket: [[usize;4];250], //[250] groups of 4 [0,1,2,3] 0-1,0-2,0-3,1-2,1-3,2-3
-    pub bracket: Vec<usize>,
+    pub generation: Arc<Mutex<Generation>>,
+    pub fitness: Arc<Mutex<Vec<i32>>>,
+    pub bracket: Arc<Mutex<Vec<usize>>>,
     pub rng: ThreadRng, //using the same engine for rng should increase performance slightly
 }
-
 impl Architect {
-    // Creates a new Architect.
     pub fn new() -> Self {
         Architect {
-            generation: Generation {
+            generation: Arc::new(Mutex::new(Generation {
                 gen_num: 0,
                 ais: (0..1000).map(|_| AI::new()).collect(),
-            },
-            fitness: vec![0; 1000],
-            bracket: vec![0; 1000],
+            })),
+            fitness: Arc::new(Mutex::new(vec![0; 1000])),
+            bracket: Arc::new(Mutex::new(vec![0; 1000])),
             rng: rand::thread_rng(),
         }
     }
 
-    // Creates the tournament bracket, for now this is simple assignment.
+    /// Creates the tournament bracket, for now this is simple assignment.
     pub fn construct_tournament(&mut self) {
         // shuffle the bracket 
         let mut rng = thread_rng();
-        self.bracket.shuffle(&mut rng);
+        //self.bracket.borrow_mut().shuffle(&mut rng);
+        self.bracket.lock().unwrap().shuffle(&mut rng);
     }
 
     // Runs all the games in bracket order.
     pub fn run_games(&mut self) {
-        // each loop creates a round robin style tournament of 1v1v1v1 (4 players)
-        for i in 0..250 {
-            let i = i*4;
-            let mut result;
-            let p0 = &self.generation.ais[self.bracket[i]];
-            let p1 = &self.generation.ais[self.bracket[i+1]];
-            let p2 = &self.generation.ais[self.bracket[i+2]];
-            let p3 = &self.generation.ais[self.bracket[i+3]];
+        let mut threads = Vec::with_capacity(25); //holds all threads
+        for i in 0..25 { //25 threads, each handling 40 ais
+            let n = i;
+            let bracket_mtx = self.bracket.clone(); //each thread has access to the bracket
+            let fitness_mtx = self.fitness.clone(); //access to the fitnesses
+            let generation_mtx = self.generation.clone(); //access to the ais
+            
+            // push a new thread onto the list
+            let handle = thread::spawn(move || {
+                let mut rng = thread_rng();
+                for j in 0..10 { //10 groups, each with 4 ais (round robin style tournament)
+                    let k = n*40 + j*4; //convenient index calculation
+                    let p0 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k]];
+                    let p1 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+1]];
+                    let p2 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+2]];
+                    let p3 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+3]];
 
-            // run all combinations of games for our four ais
-            result = Architect::run_game(&p0, &p1, &mut self.rng);
-            self.fitness[self.bracket[i]] += result.0;
-            self.fitness[self.bracket[i+1]] += result.1;
+                    // run all combinations of games for our four ais
+                    let result = Architect::run_game(&p0, &p1, &mut rng);
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.1;
 
-            result = Architect::run_game(&p0, &p2, &mut self.rng);
-            self.fitness[self.bracket[i]] += result.0;
-            self.fitness[self.bracket[i+2]] += result.1;
+                    let result = Architect::run_game(&p0, &p2, &mut rng);
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
 
-            result = Architect::run_game(&p0, &p3, &mut self.rng);
-            self.fitness[self.bracket[i]] += result.0;
-            self.fitness[self.bracket[i+3]] += result.1;
+                    let result = Architect::run_game(&p0, &p3, &mut rng);
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
-            result = Architect::run_game(&p1, &p2, &mut self.rng);
-            self.fitness[self.bracket[i+1]] += result.0;
-            self.fitness[self.bracket[i+2]] += result.1;
+                    let result = Architect::run_game(&p1, &p2, &mut rng);
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
 
-            result = Architect::run_game(&p1, &p3, &mut self.rng);
-            self.fitness[self.bracket[i+1]] += result.0;
-            self.fitness[self.bracket[i+3]] += result.1;
+                    let result = Architect::run_game(&p1, &p3, &mut rng);
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
-            result = Architect::run_game(&p2, &p3, &mut self.rng);
-            self.fitness[self.bracket[i+2]] += result.0;
-            self.fitness[self.bracket[i+3]] += result.1;
+                    let result = Architect::run_game(&p2, &p3, &mut rng);
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.0;
+                    fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
+                }
+            });
+            threads.push(handle);
+        }
+
+        // join each thread back into the main thread
+        for _ in 0..25 {
+            threads.pop().unwrap().join().unwrap();
         }
     }
 
-    // Runs a single game between to AI players and returns their fitness score.
+    /// Runs a single game between to AI players and returns their fitness score.
     pub fn run_game(player1: &AI, player2: &AI, rng: &mut ThreadRng) -> (i32, i32) {
         let player_decider: bool = rng.gen(); //decide if player1 is red or black
         let game = Engine::new();
@@ -91,7 +105,7 @@ impl Architect {
             let moves = p1.calculate(game.peak_red()); //output of the neural network
             for cur in moves {
                 let (tile, action) = Architect::index_to_move(cur);
-
+                todo!();
             }
         }
 
@@ -101,19 +115,6 @@ impl Architect {
     /// Converts an index (0 through 169) into a tile and action
     #[inline]
     pub fn index_to_move(index: usize) -> (u8, Action) {
-        //[a,b,c,d,e,f,g,h]
-        // abcde = tile // fgh = action
-        //let temp = index & 1111-1000 -> first 5 bits
-        //let u8
-        //[0...n] //northwest slide
-        //[n...m] //northeast slide
-        //[n...m] //southwest slide
-        //[n...m] //southeast slide
-        //[n...m] //northwest jump
-        //[n...m] //northeast jump
-        //[n...m] //southwest jump
-        //[n..170] //southeast jump
-
         match index {
             0 => (0, Action::MoveSoutheast),
             1 => (0, Action::JumpSoutheast),
@@ -318,27 +319,6 @@ impl Architect {
             169 => (31, Action::JumpNorthwest),
 
             _ => unreachable!(),
-        }
-
-    }
-
-    /// TODO COMMENT THIS LATER
-    pub fn determine_survival(&mut self) {
-        let mut fit_clone = self.fitness.clone(); //TODO see if we need to clone this at all, reduce memory
-        fit_clone.sort();
-        let fitness_metric = fit_clone[fit_clone.len() / 2];
-        let mut ofs: i32 = 0;
-        for i in 0..1000 {
-            if self.fitness[i] < fitness_metric {
-                ofs = ofs - 1;
-            } else {
-                ofs = ofs + 1;
-            }
-        }
-        if ofs == 0 {
-            // The math worked out nicely and we can move on to elimination and repro normally.
-        } else if ofs < 0 { //Too many marked for elimination.
-        } else if ofs > 0 { // Too few marked for elimination.
         }
     }
 }
