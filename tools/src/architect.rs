@@ -1,6 +1,6 @@
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::{engine::{self, Engine}, generation::Generation, AI};
+use crate::{engine::{self, Engine, Action}, generation::Generation, AI};
 use std::convert;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -72,7 +72,7 @@ impl Architect {
         }
     }
 
-    // Runs a single game between to AI players and returns their fitness score. Consists of 3 rounds.
+    // Runs a single game between to AI players and returns their fitness score.
     pub fn run_game(player1: &AI, player2: &AI, rng: &mut ThreadRng) -> (i32, i32) {
         let player_decider: bool = rng.gen(); //decide if player1 is red or black
         let game = Engine::new();
@@ -86,13 +86,25 @@ impl Architect {
             p2 = player1;
         }
 
+        // main game loop
         loop {
-            let moves = p1.calculate(game.peak_red());
+            let moves = p1.calculate(game.peak_red()); //output of the neural network
+            for cur in moves {
+                let (tile, action) = Architect::index_to_move(cur);
+
+            }
         }
 
         return (0, 0);
     }
 
+    /// asdf
+    #[inline]
+    pub fn index_to_move(cur: usize) -> (u8, Action) {
+
+    }
+
+    /// TODO COMMENT THIS LATER
     pub fn determine_survival(&mut self) {
         let mut fit_clone = self.fitness.clone(); //TODO see if we need to clone this at all, reduce memory
         fit_clone.sort();

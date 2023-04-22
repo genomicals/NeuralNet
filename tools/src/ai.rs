@@ -74,7 +74,7 @@ impl AI {
         // start sorting the result
         let mut vals_with_indices: Vec<(f32, usize)> = Vec::with_capacity(unsorted.len());
         for i in 0..unsorted.len() {
-            vals_with_indices.push((unsorted[i], i));
+            vals_with_indices.push((unsorted[i], i)); //convert Vec<f32> into Vec<(f32, usize)>
         }
         vals_with_indices.sort_unstable_by(|left, right| left.0.partial_cmp(&right.0).unwrap()); //sort by likeliness
         

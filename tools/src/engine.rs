@@ -58,7 +58,6 @@ impl Engine {
             red_pieces: 12,
             black_pieces: 12,
         }
-
     }
 
     /// Returns the tile a piece would land on given a specific action, can return invalid tiles
@@ -185,7 +184,7 @@ impl Engine {
         board[Engine::action_on_tile(tile, action) as usize] == 0 //make sure spot is open
     }
 
-    // TODO Performs the specified move or defines the error message if the move is invalid
+    // Performs the specified move or defines the error message if the move is invalid
     pub fn make_move(&mut self, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
         //let board = if self.current_player {&self.board_red} else {&self.board_black}; //retrieve the board
 
@@ -213,21 +212,10 @@ impl Engine {
             },
             _ => {
                 // CASE II
-                // 1. Check adjacent spaces for additional jumps 
-                //let outward_result = self.handle_outward_jump(landing_tile);
-
-                //    If any adjacent space has an enemy tile, check the space behind for automatic 
-                //    If only one such open jump then execute automatically, if multiple then ask the ai for a move
-                // 2. After checking for move chain, or move extension, then give control to the other team and essentially do case 1
-                //return self.handle_inward_jump(landing_tile);
-                
+                // Check adjacent spaces for additional jumps 
                 return self.handle_outward_jump(landing_tile);
             }
         }
-
-        //todo!();
-
-        //Ok(CheckersResult::Ok(self.current_player))
     }
 
 
@@ -263,7 +251,8 @@ impl Engine {
         }
     }
 
-    // Checks and executes outward jumps for the specified tile. I don't think we need the return here as we always call handle_inward_jump() after.
+    // Checks and executes outward jumps for the specified tile.
+    #[inline]
     fn handle_outward_jump(&mut self, landing_tile: u8) -> Result<CheckersResult, CheckersError>{
         let mut possible_moves = [false; 4];
         possible_moves[0] = self.is_move_valid(landing_tile, &Action::JumpNorthwest);
