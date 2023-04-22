@@ -67,14 +67,14 @@ impl AI {
     }
 
     /// Run the board through the AI, returning a set of sorted moves.
-    pub fn calculate(&self, board: &[i8; 32]) -> Vec<usize> {
+    pub fn calculate(&self, board: &[i8; 32]) -> Vec<u8> {
         let converted_board = board.iter().map(|elem| *elem as f32).collect(); //convert the board into a usable input for the neural net
         let unsorted = self.neuralnet.calculate(converted_board); //do the actual calculation here
 
         // start sorting the result
-        let mut vals_with_indices: Vec<(f32, usize)> = Vec::with_capacity(unsorted.len());
+        let mut vals_with_indices: Vec<(f32, u8)> = Vec::with_capacity(unsorted.len());
         for i in 0..unsorted.len() {
-            vals_with_indices.push((unsorted[i], i)); //convert Vec<f32> into Vec<(f32, usize)>
+            vals_with_indices.push((unsorted[i], i as u8)); //convert Vec<f32> into Vec<(f32, usize)>
         }
         vals_with_indices.sort_unstable_by(|left, right| left.0.partial_cmp(&right.0).unwrap()); //sort by likeliness
         

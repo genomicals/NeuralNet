@@ -81,15 +81,15 @@ impl Architect {
         }
 
         // join each thread back into the main thread
-        for _ in 0..25 {
-            threads.pop().unwrap().join().unwrap();
+        for t in threads {
+            t.join().expect("joining thread");
         }
     }
 
     /// Runs a single game between to AI players and returns their fitness score.
     pub fn run_game(player1: &AI, player2: &AI, rng: &mut ThreadRng) -> (i32, i32) {
         let player_decider: bool = rng.gen(); //decide if player1 is red or black
-        let game = Engine::new();
+        let game = Engine::new(); //by default red will start
         let p1: &AI;
         let p2: &AI;
         if player_decider {
@@ -101,11 +101,12 @@ impl Architect {
         }
 
         // main game loop
-        loop {
+        let mut cur_turn = true;
+        'turn_loop: loop {
             let moves = p1.calculate(game.peak_red()); //output of the neural network
             for cur in moves {
                 let (tile, action) = Architect::index_to_move(cur);
-                todo!();
+                
             }
         }
 
@@ -114,7 +115,7 @@ impl Architect {
 
     /// Converts an index (0 through 169) into a tile and action
     #[inline]
-    pub fn index_to_move(index: usize) -> (u8, Action) {
+    pub fn index_to_move(index: u8) -> (u8, Action) {
         match index {
             0 => (0, Action::MoveSoutheast),
             1 => (0, Action::JumpSoutheast),
