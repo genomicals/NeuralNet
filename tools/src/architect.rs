@@ -2,6 +2,8 @@ use rand::{rngs::ThreadRng, Rng};
 
 use crate::{engine::{self, Engine}, generation::Generation, AI};
 use std::convert;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 
 pub struct Architect {
     pub generation: Generation,
@@ -27,22 +29,52 @@ impl Architect {
 
     // Creates the tournament bracket, for now this is simple assignment.
     pub fn construct_tournament(&mut self) {
-        for i in 0..250 {
-            for j in 0..4 {
-                self.bracket[i * 4 + j] = j * i;
-            }
-        }
-        // we can assign a different function if we want true random matches.
+        // shuffle the bracket 
+        let mut rng = thread_rng();
+        self.bracket.shuffle(&mut rng);
     }
 
     // Runs all the games in bracket order.
     pub fn run_games(&mut self) {
-        for i in 0..250 {}
+        // each loop creates a round robin style tournament of 1v1v1v1 (4 players)
+        for i in 0..250 {
+            let i = i*4;
+            let mut result;
+            let p0 = &self.generation.ais[self.bracket[i]];
+            let p1 = &self.generation.ais[self.bracket[i+1]];
+            let p2 = &self.generation.ais[self.bracket[i+2]];
+            let p3 = &self.generation.ais[self.bracket[i+3]];
+
+            // run all combinations of games for our four ais
+            result = Architect::run_game(&p0, &p1, &mut self.rng);
+            self.fitness[self.bracket[i]] += result.0;
+            self.fitness[self.bracket[i+1]] += result.1;
+
+            result = Architect::run_game(&p0, &p2, &mut self.rng);
+            self.fitness[self.bracket[i]] += result.0;
+            self.fitness[self.bracket[i+2]] += result.1;
+
+            result = Architect::run_game(&p0, &p3, &mut self.rng);
+            self.fitness[self.bracket[i]] += result.0;
+            self.fitness[self.bracket[i+3]] += result.1;
+
+            result = Architect::run_game(&p1, &p2, &mut self.rng);
+            self.fitness[self.bracket[i+1]] += result.0;
+            self.fitness[self.bracket[i+2]] += result.1;
+
+            result = Architect::run_game(&p1, &p3, &mut self.rng);
+            self.fitness[self.bracket[i+1]] += result.0;
+            self.fitness[self.bracket[i+3]] += result.1;
+
+            result = Architect::run_game(&p2, &p3, &mut self.rng);
+            self.fitness[self.bracket[i+2]] += result.0;
+            self.fitness[self.bracket[i+3]] += result.1;
+        }
     }
 
     // Runs a single game between to AI players and returns their fitness score. Consists of 3 rounds.
-    pub fn run_game(&mut self, player1: &AI, player2: &AI, board: &mut engine::Engine) -> (i32, i32) {
-        let player_decider: bool = self.rng.gen(); //decide if player1 is red or black
+    pub fn run_game(player1: &AI, player2: &AI, rng: &mut ThreadRng) -> (i32, i32) {
+        let player_decider: bool = rng.gen(); //decide if player1 is red or black
         let game = Engine::new();
         let p1: &AI;
         let p2: &AI;
