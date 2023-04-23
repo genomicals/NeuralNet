@@ -15,12 +15,12 @@ class GenerationManager:
     The main way to train and interact with the AI.
     """
 
-    def train_generations(self, num_generations: int):
+    def train_generations(self, num_generations: int) -> None:
         """
         Trains the AI for a certain number of generations.
         """
 
-    def train_generation(self):
+    def train_generation(self) -> None:
         """
         Trains the AI for a single generation.
         """
@@ -31,12 +31,12 @@ class GenerationManager:
         """
 
     
-    def save_generation(self, name: str):
+    def save_generation(self, name: str) -> None:
         """
         Save the current generation under the given name
         """
 
-    def load_generation(self, name: str):
+    def load_generation(self, name: str) -> None:
         """
         Load the generation with the given name
         """
@@ -47,7 +47,7 @@ class GameManager:
     Used to play against a particular AI.
     """
 
-    def new_game(self):
+    def new_game(self, player: bool) -> None:
         """
         Initialize a new game.
         """
