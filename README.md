@@ -1,5 +1,5 @@
 # NeuralNet - Checkers AI
-Repository for our CptS 434 Neural Networks course. An AI that plays checkers and evolves through a genetic algorithm. Instructions for how to use will be provided at a later date.
+Repository for our CptS 434 Neural Networks course. An AI that plays checkers and evolves through a genetic algorithm.
 
 ## Setup
 ### Prerequisites
@@ -13,9 +13,25 @@ maturin develop --release
 ```
 
 ### Usage
-Run in the "neuralnet/" directory to get started:
+Run in the "neuralnet/gui/" directory to get started:
 ```
 python main.py
+```
+
+Alternatively, you can import the tools module in your own Python script or even the Python REPL. Basic usage looks like so:
+```
+import tools
+
+gen = tools.GenerationManager()
+gen.train_generation()
+gen.train_generations(100)
+gen.save_generation("test_gen") #save to disk
+gen.load_generation("test_gen")
+
+game = gen.create_game()
+result = game.start_game(true) #start the game
+#result: 0 = next move, 1 = player won, 2 = ai won
+game.make_move(2, 1) #move the piece at tile 2 northeast
 ```
 
 ## License
