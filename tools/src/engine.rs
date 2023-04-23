@@ -199,7 +199,6 @@ impl Engine {
                 // CASE I
                 // Give control to the other team, and check the four adjacent spaces for any automatic moves
                 // If only one such case then execute automatically, otherwise ask the ai
-                println!("CASE I");
                 self.current_player = !self.current_player;
                 return self.handle_inward_jump(31 - landing_tile); //flip the perspective
             },
@@ -222,8 +221,6 @@ impl Engine {
         }
         // CASE II
         // Check adjacent spaces for additional jumps 
-        println!("CASE II");
-
         if self.current_player {self.black_pieces -= 1;} else {self.red_pieces -= 1;} //update piece count
         if self.black_pieces == 0 || self.red_pieces == 0 {return Ok(CheckersResult::Win(self.current_player));} //check win
         self.update_board(landing_tile, self.get_board()[tile as usize]); //copy piece to new tile
@@ -235,9 +232,6 @@ impl Engine {
     /// Checks and executes inward jumps towards the specified tile
     #[inline]
     fn handle_inward_jump(&mut self, landing_tile: u8) -> Result<CheckersResult, CheckersError> {
-        println!("lt = {}",landing_tile);
-        println!("current player: {}", self.current_player);
-        println!("move valid: {}", self.is_move_valid(15, &Action::JumpSouthwest));
         let mut possible_moves = [false; 4];
         let mut directions: [u8; 4] = [0; 4];
         if landing_tile % 2 == 0 {
@@ -255,8 +249,6 @@ impl Engine {
         // get indices of trues
         let valid_bools: Vec<usize> = possible_moves.iter().enumerate().filter_map(|(i,v)| v.then_some(i)).collect();
         
-        println!("inward jump result: {}", valid_bools.len());
-        println!("inward jump bools: {:?}", possible_moves);
         if valid_bools.len() != 1 {
             return Ok(CheckersResult::Ok(self.current_player)); //ask the AI to make the next move
         }
@@ -338,7 +330,6 @@ impl Engine {
     pub fn update_board(&mut self, tile: u8, value: i8) {
         let board_main;
         let board_secondary;
-        println!();
         if self.current_player {
             board_main = &mut self.board_red;
             board_secondary = &mut self.board_black;

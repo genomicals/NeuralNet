@@ -73,72 +73,47 @@ impl Architect {
             
             // push a new thread onto the list
             let handle = thread::spawn(move || {
-                println!("inside of thread {}", n);
                 let mut rng = thread_rng();
-                println!("inside of thread {}, past rng.", n);
                 for j in 0..10 { //10 groups, each with 4 ais (round robin style tournament)
-
-                    println!("phase 0: {}", n);
-
                     let k = n*40 + j*4; //convenient index calculation
                     let p0 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]].clone();
-                    println!("phase 1.5: {}", n);
                     let p1 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]].clone();
-                    println!("phase 1.6: {}", n);
                     let p2 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]].clone();
                     let p3 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]].clone();
-
-                    println!("phase 1: {}", n);
 
                     // run all combinations of games for our four ais
                     let result = Architect::run_game(p0.clone(), p1.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.1;
 
-                    println!("phase 2: {}", n);
-
                     let result = Architect::run_game(p0.clone(), p2.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
-
-                    println!("phase 3: {}", n);
 
                     let result = Architect::run_game(p0.clone(), p3.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
-                    println!("phase 4: {}", n);
-
                     let result = Architect::run_game(p1.clone(), p2.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
-
-                    println!("phase 5: {}", n);
 
                     let result = Architect::run_game(p1.clone(), p3.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
-                    println!("phase 6: {}", n);
-
                     let result = Architect::run_game(p2.clone(), p3.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
-
-                    println!("thread {} complete!", n);
                 }
             });
             threads.push(handle);
         }
 
-        println!("bouta be waitin for all dem threads");
-
         // join each thread back into the main thread
         for t in threads {
             t.join().expect("joining thread");
         }
-
-        println!("collected all threads back into main");
     }
 
     /// Runs a single game between to AI players and returns their fitness scores.
@@ -163,7 +138,6 @@ impl Architect {
         let mut cur_turn = false;
         'turn_loop: loop {
 
-            println!("Game status: red = {}, black = {}, board = {:?}", game.red_pieces, game.black_pieces, &game.peek_black());
             // retrieve output of neural network
             let moves = if cur_turn {
                 p1.lock().unwrap().calculate(game.peek_red())
@@ -172,9 +146,6 @@ impl Architect {
             };
 
             let mut current_penalty = 0;
-
-            println!("{:?}", moves);
-            println!("this should only print once, although it shouldnt actually");
 
             // find the first valid move
             for cur in moves {
@@ -191,7 +162,6 @@ impl Architect {
                     }
 
                     if stale_count >= 30 { //end the game
-                        println!("game ended by stalemate");
                         if game.red_pieces >= game.black_pieces { //black goes first but red gets the stalemate advantage
                             cur_turn = true;
                         } else {
@@ -217,18 +187,15 @@ impl Architect {
                 // move did not go smoothly
                 current_penalty -= 1;
             }
-            println!("someone won by default");
             // none of the moves worked, so other player must have won (either by getting trapped or literally having no pieces)
             cur_turn = !cur_turn;
             break 'turn_loop;
         }
 
         if cur_turn { //red won
-            println!("Red won");
             scores[0] += 10;
             scores[1] -= 10;
         } else { //black won
-            println!("Black won");
             scores[0] -= 10;
             scores[1] += 10;
         }

@@ -11,6 +11,7 @@ if __name__ == "__main__":
 
 
     gen = tools.GenerationManager()
+    gen.train_generation()
     game = gen.create_game()
     print(f"{gen}")
     print(f"{game}")

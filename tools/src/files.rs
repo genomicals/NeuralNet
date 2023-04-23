@@ -24,21 +24,15 @@ pub fn save_generation(ais: Arc<Mutex<Vec<Arc<Mutex<AI>>>>>, name: &str) -> Resu
     fs::remove_file(&gen_file_loc);
     let mut gen_file = std::fs::File::create(&gen_file_loc).unwrap(); //retrieve a file struct
 
-    println!("here");
-    println!("size of generation: {}", ais.len());
     for i in 0..ais.len() {
         //println!("on iteration: {}", i);
         if i == 0 {
             let x = &ais[i].lock().unwrap().genome_as_bytes();
-            println!("0th: {}", x[0]);
         }
         gen_file.write_all(&ais[i].lock().unwrap().genome_as_bytes()); //write the genome for all 1000 AIs
     }
-    println!("wow");
 
     drop(gen_file);
-
-    println!("wow right before");
 
     Ok(())
 }
@@ -66,15 +60,6 @@ pub fn load_generation(name: &str) -> Result<Vec<Arc<Mutex<AI>>>, NeuralNetError
     }
 
     let mut file = File::open(gen_file_loc).map_err(|_| NeuralNetError::GenFileNotFound)?;
-    //let reader = BufReader::new(file);
-
-    //let numbers: Vec<f32> = reader
-    //    .lines()
-    //    .map(|line| line.unwrap().parse::<f32>().unwrap())
-    //    .collect();
-    //let numbers = f32::from_be_bytes();
-    println!("here");
-
 
     let mut checked = true;
     let mut floats = Vec::new();
@@ -85,7 +70,6 @@ pub fn load_generation(name: &str) -> Result<Vec<Arc<Mutex<AI>>>, NeuralNetError
         
         if checked {
             checked = false;
-            println!("0th read: {}", buffer[0]);
         }
 
         match res {
@@ -99,21 +83,6 @@ pub fn load_generation(name: &str) -> Result<Vec<Arc<Mutex<AI>>>, NeuralNetError
         floats.push(f);
     }
 
-
-
-    // TODO, DO THIS STUFF LATER
-    //let mut buf = vec![0; 17323];
-    //file.read(&mut buf);
-
-    //let genome = AI::genome_from_bytes(&buf);
-    
-
-
-
-    //Ok(Generation {
-    //    gen_num: 0,
-    //    ais: floats.chunks(17323).map(|chunk| AI::with_genome(chunk.to_vec())).collect(),
-    //})
     Ok(floats.chunks(17323).map(|chunk| Arc::new(Mutex::new(AI::with_genome(chunk.to_vec())))).collect())
 }
 
