@@ -320,3 +320,65 @@ def train_generations(window, GenerationManager):
     x = (window.winfo_screenwidth() // 2) - (width // 2)
     y = (window.winfo_screenheight() // 2) - (height // 2)
     popup.geometry('{}x{}+{}+{}'.format(width, height, x, y))  
+
+def save_generation(window, GenerationManager):
+
+    def save(popup, name):
+        GenerationManager.save_generation(name)
+        popup.destroy()
+
+    # Create new pop-up window
+    popup = tk.Toplevel(window)
+    popup.title("Save Current Generation")
+
+    # Create label and text entry widgets for name input
+    label = tk.Label(popup, text="What would you like to name this generation?")
+    label.grid(row=0, column=0)
+
+    name = tk.Entry(popup)
+    name.grid(row=1, column=0)
+
+    name = name.get()
+
+    # Create OK button that retrieves name and closes window
+    ok_button = tk.Button(popup, text="Save", command=lambda popup=popup, name=name: save(popup, name))
+    ok_button.grid(row=2, column=0)  
+
+    # Center the popup window in the main window
+    popup.update_idletasks()
+    width = popup.winfo_width()
+    height = popup.winfo_height()
+    x = (window.winfo_screenwidth() // 2) - (width // 2)
+    y = (window.winfo_screenheight() // 2) - (height // 2)
+    popup.geometry('{}x{}+{}+{}'.format(width, height, x, y))  
+
+def load_generation(window, GenerationManager):
+
+    def load(popup, name):
+        GenerationManager.load_generation(name)
+        popup.destroy()
+
+    # Create new pop-up window
+    popup = tk.Toplevel(window)
+    popup.title("Load a Generation")
+
+    # Create label and text entry widgets for name input
+    label = tk.Label(popup, text="What is the name of the generation you would like to load?")
+    label.grid(row=0, column=0)
+
+    name = tk.Entry(popup)
+    name.grid(row=1, column=0)
+
+    name = name.get()
+
+    # Create OK button that retrieves name and closes window
+    ok_button = tk.Button(popup, text="Load", command=lambda popup=popup, name=name: load(popup, name))
+    ok_button.grid(row=2, column=0)  
+
+    # Center the popup window in the main window
+    popup.update_idletasks()
+    width = popup.winfo_width()
+    height = popup.winfo_height()
+    x = (window.winfo_screenwidth() // 2) - (width // 2)
+    y = (window.winfo_screenheight() // 2) - (height // 2)
+    popup.geometry('{}x{}+{}+{}'.format(width, height, x, y))  

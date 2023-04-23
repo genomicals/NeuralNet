@@ -25,17 +25,23 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     
     list = GameManager.peek_board()
     utils.make_board(list, board_squares, blackPiece, redPiece, blackKing, redKing)
+    print(str(list))
     
     square = board_squares[row][col]
+    oldColor = square.cget("bg")
+
+    square.config(bg = "green")
     if (((row-1)+(col-1)) % 2 == 1):
         player_turn_label.config(text="Invalid Piece")
+        square.config(bg = oldColor)
         return
 
     tile = utils.getListIndex((row-1,col-1))
     piece = list[tile]
-    # if (piece >= 0):
-    #     player_turn_label.config(text="Invalid Piece")
-    #     return
+    if (piece <= 0):
+        player_turn_label.config(text="Invalid Piece")
+        square.config(bg = oldColor)
+        return
     
     popup = tk.Toplevel()
     popup.title("Choose Move")
@@ -52,7 +58,7 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     popup.update_idletasks()
     width = 300
     height = 400
-    x = (window.winfo_screenwidth() // 2) - (width // 2)
+    x = 1380
     y = (window.winfo_screenheight() // 2) - (height // 2)
     popup.geometry('{}x{}+{}+{}'.format(width, height, x, y))  
 
@@ -92,12 +98,21 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
 
     def on_go_click():
         popup.destroy()
+        square.config(bg = oldColor)
 
     def on_cancel_click():
         nonlocal cancel_flag  # use nonlocal to modify outer variable
         cancel_flag = True
+        square.config(bg = oldColor)
         popup.destroy()
-        
+
+    def on_popup_close():
+        nonlocal cancel_flag  # use nonlocal to modify outer variable
+        cancel_flag = True
+        square.config(bg = oldColor)
+        popup.destroy()
+
+    popup.protocol("WM_DELETE_WINDOW", on_popup_close)
 
     go_button = tk.Button(popup, text="Go", command=on_go_click)
     go_button.pack()
@@ -108,7 +123,8 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     popup.wait_window()
 
     if cancel_flag:
-        player_turn_label.config(text="Player's Turn (Black)")
+        player_turn_label.config(text="Player's Turn (Red)")
+        square.config(bg = oldColor)
         window.update()
         return
 
@@ -116,13 +132,14 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     #check if the move is valid
 
     action = move.get()
-    print(action)
+    print(f"tile: ({row-1},{col-1}) = {tile}, action: {action}")
     
-    player_turn_label.config(text="AI's Turn (Red)")
+    player_turn_label.config(text="AI's Turn (Black)")
     window.update()
     status = GameManager.make_move(tile, action)
     utils.make_board(GameManager.peek_board(), board_squares, blackPiece, redPiece, blackKing, redKing)
-
+    print(str(GameManager.peek_board()))
+    square.config(bg = oldColor)
     if status > 0:
         popup = tk.Toplevel()
         popup.title("Game Over!")
@@ -161,7 +178,7 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
         player_turn_label.config(text=message)
         return
 
-    player_turn_label.config(text="Player's Turn (Black)")
+    player_turn_label.config(text="Player's Turn (Red)")
     window.update()
 
 
@@ -196,7 +213,7 @@ def new_game(window, board_squares, blackPiece, redPiece, blackKing, redKing, Ga
             aiStarts = True
 
         if aiStarts:
-            player_turn_label.config(text="AI's Turn (Red)")
+            player_turn_label.config(text="AI's Turn (Black)")
             window.update()
         
         list = GameManager.peek_board()
@@ -209,7 +226,7 @@ def new_game(window, board_squares, blackPiece, redPiece, blackKing, redKing, Ga
         utils.make_board(GameManager.peek_board(), board_squares, blackPiece, redPiece, blackKing, redKing)
 
         # Create a label to show the current player's turn
-        player_turn_label.config(text="Player's turn (Black)")
+        player_turn_label.config(text="Player's turn (Red)")
         window.update()
 
 
@@ -326,8 +343,8 @@ class CheckersGame:
 
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #get functions for loading and saving
-    Generations.add_command(label="Load a Generation")
-    Generations.add_command(label="Save Current Generation")
+    Generations.add_command(label="Load a Generation", command=lambda window=window, gen=gen: utils.load_generation(window, gen))
+    Generations.add_command(label="Save Current Generation", command=lambda window=window, gen=gen: utils.save_generation(window, gen))
 
     # Center the popup window in the main window
     window.update_idletasks()
