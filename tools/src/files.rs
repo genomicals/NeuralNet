@@ -1,12 +1,14 @@
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::{env, fs::{self, File}, io::{Read, Write}, path::Path};
 
-use crate::{ai::AI, errors::NeuralNetError, generation::Generation};
+use crate::{ai::AI, errors::NeuralNetError};
 
 
 /// Saves the given generation onto the filesystem
-pub fn save_generation(generation: &Generation, name: &str) -> Result<(), NeuralNetError> {
+pub fn save_generation(ais: &Vec<Arc<Mutex<AI>>>, name: &str) -> Result<(), NeuralNetError> {
     let cur = env::current_dir(); //grabs current directory
     if let Err(_) = cur {
         return Err(NeuralNetError::GenerationNotSaved); //handles error
@@ -24,14 +26,14 @@ pub fn save_generation(generation: &Generation, name: &str) -> Result<(), Neural
     let mut gen_file = std::fs::File::create(&gen_file_loc).unwrap(); //retrieve a file struct
 
     println!("here");
-    println!("size of generation: {}", generation.ais.len());
-    for i in 0..generation.ais.len() {
+    println!("size of generation: {}", ais.len());
+    for i in 0..ais.len() {
         //println!("on iteration: {}", i);
         if i == 0 {
-            let x = &generation.ais[i].genome_as_bytes();
+            let x = &ais[i].lock().unwrap().genome_as_bytes();
             println!("0th: {}", x[0]);
         }
-        gen_file.write_all(&generation.ais[i].genome_as_bytes()); //write the genome for all 1000 AIs
+        gen_file.write_all(&ais[i].lock().unwrap().genome_as_bytes()); //write the genome for all 1000 AIs
     }
     println!("wow");
 
@@ -44,7 +46,7 @@ pub fn save_generation(generation: &Generation, name: &str) -> Result<(), Neural
 
 
 /// Loads the specified generation from the filesystem
-pub fn load_generation(name: &str) -> Result<Generation, NeuralNetError> {
+pub fn load_generation(name: &str) -> Result<Vec<Arc<Mutex<AI>>>, NeuralNetError> {
     let cur = env::current_dir(); //grabs current directory
     if let Err(_) = cur {
         return Err(NeuralNetError::GenerationNotLoaded); //handles error
@@ -109,10 +111,11 @@ pub fn load_generation(name: &str) -> Result<Generation, NeuralNetError> {
 
 
 
-    Ok(Generation {
-        gen_num: 0,
-        ais: floats.chunks(17323).map(|chunk| AI::with_genome(chunk.to_vec())).collect(),
-    })
+    //Ok(Generation {
+    //    gen_num: 0,
+    //    ais: floats.chunks(17323).map(|chunk| AI::with_genome(chunk.to_vec())).collect(),
+    //})
+    Ok(floats.chunks(17323).map(|chunk| Arc::new(Mutex::new(AI::with_genome(chunk.to_vec())))).collect())
 }
 
 

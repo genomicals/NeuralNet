@@ -1,4 +1,4 @@
-use std::mem;
+use std::{mem, sync::{Mutex, Arc}};
 
 use crate::{errors::NeuralNetError, neural_network::NeuralNetwork};
 use pyo3::prelude::*;
@@ -156,5 +156,9 @@ pub fn reproduce(parent0: &AI, parent1: &AI, rng: &mut ThreadRng) -> Result<Vec<
     genome[17323] = genome[17323].min(0.0).max(1.0); //cap the mutability
 
     Ok(genome)
+}
+
+pub fn gen_thousand() -> Vec<Arc<Mutex<AI>>> {
+    (0..1000).map(|_| Arc::new(Mutex::new(AI::new()))).collect()
 }
 

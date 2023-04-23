@@ -1,12 +1,12 @@
 use rand::{rngs::ThreadRng, Rng, seq::IteratorRandom};
 
-use crate::{engine::{self, Engine, Action}, generation::Generation, AI, ai::reproduce};
-use std::{convert, sync::{Arc, Mutex}, borrow::Borrow, thread};
+use crate::{engine::{self, Engine, Action}, ai::{self, AI}};
+use std::{convert, sync::{Arc, Mutex}, borrow::Borrow, thread, ops::Deref};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
 pub struct Architect {
-    pub generation: Arc<Mutex<Generation>>,
+    pub generation: Arc<Mutex<Vec<Arc<Mutex<AI>>>>>,
     pub fitness: Arc<Mutex<Vec<i32>>>,
     pub bracket: Arc<Mutex<Vec<usize>>>,
     pub rng: ThreadRng, //using the same engine for rng should increase performance slightly
@@ -14,10 +14,11 @@ pub struct Architect {
 impl Architect {
     pub fn new() -> Self {
         Architect {
-            generation: Arc::new(Mutex::new(Generation {
-                gen_num: 0,
-                ais: (0..1000).map(|_| AI::new()).collect(),
-            })),
+            //generation: Arc::new(Mutex::new(Generation {
+            //    gen_num: 0,
+            //    ais: (0..1000).map(|_| AI::new()).collect(),
+            //})),
+            generation: Arc::new(Mutex::new(ai::gen_thousand())),
             fitness: Arc::new(Mutex::new(vec![0; 1000])),
             bracket: Arc::new(Mutex::new(vec![0; 1000])),
             rng: rand::thread_rng(),
@@ -30,32 +31,32 @@ impl Architect {
         self.run_games(); //generate fitnesses
         let min_val = *self.fitness.lock().unwrap().iter().min().unwrap(); //get the absolute minimum in the thing (for shifting all the values)
         let normalize_constant = *self.fitness.lock().unwrap().iter().max().unwrap() + min_val; //find what we need to normalize by
-        let probabilities: Vec<(usize, f32)> = self.fitness
+        let mut probabilities: Vec<f32> = self.fitness
             .lock()
             .unwrap()
             .iter()
-            .enumerate()
-            .map(|(i, value)| (i, (value + min_val) as f32 / normalize_constant as f32))
+            .map(|value| (value + min_val) as f32 / normalize_constant as f32)
             .collect(); //shift and normalize
         
         // kill 500 using a very smart algorithm
         let mut count = 0;
         while count < 500 {
-            let p = *probabilities.choose(&mut self.rng).unwrap();
+            let p = probabilities.iter().enumerate().choose(&mut self.rng).unwrap();
             let realized_prob = self.rng.gen_range(0.0..1.05); //no ai is safe
-            if p.1 < realized_prob {
+            if *p.1 < realized_prob {
                 count += 1;
-                self.fitness.lock().unwrap().remove(p.0);
-                self.generation.lock().unwrap().ais.remove(p.0);
+                self.fitness.lock().unwrap().swap_remove(p.0);
+                self.generation.lock().unwrap().swap_remove(p.0);
+                probabilities.swap_remove(p.0);
             }
         }
 
         for _ in 0..500 {
             let mut gen = self.generation.lock().unwrap();
-            let a0 = gen.ais.choose(&mut self.rng).unwrap();
-            let a1 = gen.ais.choose(&mut self.rng).unwrap(); //if one ai breeds with itself, we ball
-            let new_genome = reproduce(a0, a1, &mut self.rng).unwrap(); //we know our ais are the same size
-            gen.ais.push(AI::with_genome(new_genome));
+            let a0 = gen.choose(&mut self.rng).unwrap();
+            let a1 = gen.choose(&mut self.rng).unwrap(); //if one ai breeds with itself, we ball
+            let new_genome = ai::reproduce(a0.lock().unwrap().deref(), a1.lock().unwrap().deref(), &mut self.rng).unwrap(); //we know our ais are the same size
+            gen.push(Arc::new(Mutex::new(AI::with_genome(new_genome))));
             self.fitness.lock().unwrap().push(0);
         }
     }
@@ -79,47 +80,47 @@ impl Architect {
                     println!("phase 0: {}", n);
 
                     let k = n*40 + j*4; //convenient index calculation
-                    let p0 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k]];
+                    let p0 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]].clone();
                     println!("phase 1.5: {}", n);
-                    let p1 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+1]];
+                    let p1 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]].clone();
                     println!("phase 1.6: {}", n);
-                    let p2 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+2]];
-                    let p3 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+3]];
+                    let p2 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]].clone();
+                    let p3 = generation_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]].clone();
 
                     println!("phase 1: {}", n);
 
                     // run all combinations of games for our four ais
-                    let result = Architect::run_game(&p0, &p1, &mut rng);
+                    let result = Architect::run_game(p0.clone(), p1.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.1;
 
                     println!("phase 2: {}", n);
 
-                    let result = Architect::run_game(&p0, &p2, &mut rng);
+                    let result = Architect::run_game(p0.clone(), p2.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
 
                     println!("phase 3: {}", n);
 
-                    let result = Architect::run_game(&p0, &p3, &mut rng);
+                    let result = Architect::run_game(p0.clone(), p3.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
                     println!("phase 4: {}", n);
 
-                    let result = Architect::run_game(&p1, &p2, &mut rng);
+                    let result = Architect::run_game(p1.clone(), p2.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
 
                     println!("phase 5: {}", n);
 
-                    let result = Architect::run_game(&p1, &p3, &mut rng);
+                    let result = Architect::run_game(p1.clone(), p3.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
                     println!("phase 6: {}", n);
 
-                    let result = Architect::run_game(&p2, &p3, &mut rng);
+                    let result = Architect::run_game(p2.clone(), p3.clone(), &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
@@ -135,14 +136,16 @@ impl Architect {
         for t in threads {
             t.join().expect("joining thread");
         }
+
+        println!("collected all threads back into main");
     }
 
     /// Runs a single game between to AI players and returns their fitness scores.
-    pub fn run_game(player1: &AI, player2: &AI, rng: &mut ThreadRng) -> (i32, i32) {
+    pub fn run_game(player1: Arc<Mutex<AI>>, player2: Arc<Mutex<AI>>, rng: &mut ThreadRng) -> (i32, i32) {
         let player_decider: bool = rng.gen(); //decide if player1 is red or black
         let mut game = Engine::new(); //by default black will start
-        let p1: &AI;
-        let p2: &AI;
+        let p1;
+        let p2;
         if player_decider {
             p1 = player1;
             p2 = player2;
@@ -162,9 +165,9 @@ impl Architect {
             println!("Game status: red = {}, black = {}, board = {:?}", game.red_pieces, game.black_pieces, &game.peek_black());
             // retrieve output of neural network
             let moves = if cur_turn {
-                p1.calculate(game.peek_red())
+                p1.lock().unwrap().calculate(game.peek_red())
             } else {
-                p2.calculate(game.peek_black())
+                p2.lock().unwrap().calculate(game.peek_black())
             };
 
             let mut current_penalty = 0;

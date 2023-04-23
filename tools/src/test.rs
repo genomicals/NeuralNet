@@ -1,9 +1,9 @@
 use crate::{
-    ai::AI,
+    ai::{AI, self},
     errors, files,
-    generation::{self, Generation}, architect::Architect, engine::{Engine, Action},
+    architect::Architect, engine::{Engine, Action},
 };
-use std::{env, mem::MaybeUninit};
+use std::{env, mem::MaybeUninit, ops::Deref, sync::{Arc, Mutex}};
 
 struct TestStruct {
     x: i32,
@@ -43,7 +43,7 @@ pub fn test_game() -> bool {
     let p2 = AI::new();
     let mut rng = rand::thread_rng();
     let mut game = Engine::new();
-    let scores = Architect::run_game(&p1, &p2, &mut rng);
+    let scores = Architect::run_game(Arc::new(Mutex::new(p1)), Arc::new(Mutex::new(p2)), &mut rng);
     println!("scores: {:?}", scores);
     return true;
 }
@@ -58,10 +58,11 @@ pub fn test_evolve() -> bool {
 /// Test the files modules
 pub fn test_files() -> bool {
     println!("here generating a new generation");
-    let gen = Generation::new(); // Create new Generation
+    //let gen = Generation::new(); // Create new Generation
+    let ais = ai::gen_thousand();
 
     println!("here before saving");
-    let res = files::save_generation(&gen, "test_gen"); // Save the Generation
+    let res = files::save_generation(&ais, "test_gen"); // Save the Generation
     if let Err(_) = res {
         println!("In the Err");
         return false;
@@ -82,10 +83,10 @@ pub fn test_files() -> bool {
     let l_gen = l_gen.unwrap();
     // check if each of the ai's match.. just in case.
     //gen.ais.iter().reduce(|acc, e| )
-    for i in 0..gen.ais.len() {
-        if gen.ais[i] != l_gen.ais[i] {
+    for i in 0..ais.len() {
+        if ais[i].lock().unwrap().deref() != l_gen[i].lock().unwrap().deref() {
             println!("Ai #:{} failed", i);
-            println!("{} vs {}", gen.ais[i].genome[0], l_gen.ais[i].genome[0]);
+            println!("{} vs {}", ais[i].lock().unwrap().genome[0], l_gen[i].lock().unwrap().genome[0]);
             return false;
         }
     }
