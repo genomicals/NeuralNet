@@ -142,8 +142,8 @@ pub fn reproduce(parent0: &AI, parent1: &AI, rng: &mut ThreadRng) -> Result<Vec<
 
     */
     let num_mutations: usize = (genome[17323].tanh() * 500.0 + 505.0).round() as usize; // [5, 1005]
-    let mut mutability_range: f32 = 0.0;
-    let mut index: usize = 0;
+    let mut mutability_range: f32;
+    let mut index: usize;
 
     for _ in 0..num_mutations {
         index = rand::thread_rng().gen_range(0..17323);

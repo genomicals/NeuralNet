@@ -48,6 +48,13 @@ pub fn test_game() -> bool {
     return true;
 }
 
+pub fn test_evolve() -> bool {
+    let mut arch = Architect::new();
+    arch.evolve_generation();
+
+    return true;
+}
+
 /// Test the files modules
 pub fn test_files() -> bool {
     println!("here generating a new generation");

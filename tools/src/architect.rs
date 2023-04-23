@@ -1,6 +1,6 @@
-use rand::{rngs::ThreadRng, Rng};
+use rand::{rngs::ThreadRng, Rng, seq::IteratorRandom};
 
-use crate::{engine::{self, Engine, Action}, generation::Generation, AI};
+use crate::{engine::{self, Engine, Action}, generation::Generation, AI, ai::reproduce};
 use std::{convert, sync::{Arc, Mutex}, borrow::Borrow, thread};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -25,11 +25,39 @@ impl Architect {
     }
 
     /// Creates the tournament bracket, for now this is simple assignment.
-    pub fn construct_tournament(&mut self) {
-        // shuffle the bracket 
-        let mut rng = thread_rng();
-        //self.bracket.borrow_mut().shuffle(&mut rng);
-        self.bracket.lock().unwrap().shuffle(&mut rng);
+    pub fn evolve_generation(&mut self) {
+        self.bracket.lock().unwrap().shuffle(&mut self.rng); //shuffle the bracket
+        self.run_games(); //generate fitnesses
+        let min_val = *self.fitness.lock().unwrap().iter().min().unwrap(); //get the absolute minimum in the thing (for shifting all the values)
+        let normalize_constant = *self.fitness.lock().unwrap().iter().max().unwrap() + min_val; //find what we need to normalize by
+        let probabilities: Vec<(usize, f32)> = self.fitness
+            .lock()
+            .unwrap()
+            .iter()
+            .enumerate()
+            .map(|(i, value)| (i, (value + min_val) as f32 / normalize_constant as f32))
+            .collect(); //shift and normalize
+        
+        // kill 500 using a very smart algorithm
+        let mut count = 0;
+        while count < 500 {
+            let p = *probabilities.choose(&mut self.rng).unwrap();
+            let realized_prob = self.rng.gen_range(0.0..1.05); //no ai is safe
+            if p.1 < realized_prob {
+                count += 1;
+                self.fitness.lock().unwrap().remove(p.0);
+                self.generation.lock().unwrap().ais.remove(p.0);
+            }
+        }
+
+        for _ in 0..500 {
+            let mut gen = self.generation.lock().unwrap();
+            let a0 = gen.ais.choose(&mut self.rng).unwrap();
+            let a1 = gen.ais.choose(&mut self.rng).unwrap(); //if one ai breeds with itself, we ball
+            let new_genome = reproduce(a0, a1, &mut self.rng).unwrap(); //we know our ais are the same size
+            gen.ais.push(AI::with_genome(new_genome));
+            self.fitness.lock().unwrap().push(0);
+        }
     }
 
     // Runs all the games in bracket order.
@@ -43,42 +71,65 @@ impl Architect {
             
             // push a new thread onto the list
             let handle = thread::spawn(move || {
+                println!("inside of thread {}", n);
                 let mut rng = thread_rng();
+                println!("inside of thread {}, past rng.", n);
                 for j in 0..10 { //10 groups, each with 4 ais (round robin style tournament)
+
+                    println!("phase 0: {}", n);
+
                     let k = n*40 + j*4; //convenient index calculation
                     let p0 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k]];
+                    println!("phase 1.5: {}", n);
                     let p1 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+1]];
+                    println!("phase 1.6: {}", n);
                     let p2 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+2]];
                     let p3 = &generation_mtx.lock().unwrap().ais[bracket_mtx.lock().unwrap()[k+3]];
+
+                    println!("phase 1: {}", n);
 
                     // run all combinations of games for our four ais
                     let result = Architect::run_game(&p0, &p1, &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.1;
 
+                    println!("phase 2: {}", n);
+
                     let result = Architect::run_game(&p0, &p2, &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
+
+                    println!("phase 3: {}", n);
 
                     let result = Architect::run_game(&p0, &p3, &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
+                    println!("phase 4: {}", n);
+
                     let result = Architect::run_game(&p1, &p2, &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.1;
+
+                    println!("phase 5: {}", n);
 
                     let result = Architect::run_game(&p1, &p3, &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+1]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
 
+                    println!("phase 6: {}", n);
+
                     let result = Architect::run_game(&p2, &p3, &mut rng);
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+2]] += result.0;
                     fitness_mtx.lock().unwrap()[bracket_mtx.lock().unwrap()[k+3]] += result.1;
+
+                    println!("thread {} complete!", n);
                 }
             });
             threads.push(handle);
         }
+
+        println!("bouta be waitin for all dem threads");
 
         // join each thread back into the main thread
         for t in threads {

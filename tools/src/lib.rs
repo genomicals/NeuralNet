@@ -37,6 +37,9 @@ fn run_tests() -> bool {
     if !test::test_game() {
         return false;
     }
+    if !test::test_evolve() {
+        return false;
+    }
     println!("waddup end");
 
     true
