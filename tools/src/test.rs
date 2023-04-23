@@ -1,7 +1,7 @@
 use crate::{
     ai::AI,
     errors, files,
-    generation::{self, Generation},
+    generation::{self, Generation}, architect::Architect, engine::{Engine, Action},
 };
 use std::{env, mem::MaybeUninit};
 
@@ -14,30 +14,37 @@ impl TestStruct {
     }
 }
 
-pub fn thing_test() -> bool {
-    println!("waddup");
-    //let y = TestStruct {x: 3};
-    //let x: [f32; 20000] = [(); 20000].map(|_| 0.0);
-    //let a = AI::new();
-    //let ar: [TestStruct; 1000] = [(); 1000].map(|_| TestStruct::new()); //this is fine
-    //let aar: [AI; 1] = [(); 1].map(|_| AI::new()); //this is fine
+pub fn test_game_manual() -> bool {
+    let p1 = AI::new();
+    let p2 = AI::new();
+    let mut rng = rand::thread_rng();
+    let mut game = Engine::new();
+    //let scores = Architect::run_game(&p1, &p2, &mut rng);
+    //println!("scores: {:?}", scores);
+    println!("{:?}", game.peek_black());
+    let result = game.make_move(17, Action::MoveNorthwest);
+    println!("results are in: {:?}", result);
+    println!("{:?}", game.peek_black());
+    let result = game.make_move(21, Action::MoveNortheast);
+    println!("results are in: {:?}", result);
+    println!("{:?}", game.peek_black());
+    println!("current piece counts: {}, {}", game.black_pieces, game.red_pieces);
+    let result = game.make_move(28, Action::MoveNortheast);
+    println!("results are in: {:?}", result);
+    let result = game.make_move(30, Action::MoveNorthwest);
+    println!("results are in: {:?}", result);
+    let result = game.make_move(28, Action::JumpNortheast);
+    println!("results are in: {:?}", result);
+    return true;
+}
 
-    //let mut aar: [AI; 4] = unsafe {MaybeUninit::uninit().assume_init()};
-    //for i in 0..4 {
-    //    aar[i] = AI::new();
-    //}
-
-    //let mut aar: [AI; 1000] = unsafe {MaybeUninit::uninit().assume_init()};
-    //for i in 0..1000 {
-    //    aar[i] = AI::new();
-    //}
-
-    //let aaar: [AI; 2] = [(); 2].map(|_| AI::new()); //this is not fine
-    //let aar: [AI; 3] = [(); 3].map(|_| AI::new()); //this is not fine
-    //let aar: [AI; 5] = [(); 5].map(|_| AI::new()); //this is not fine
-    //let arr: [AI; 10] = [(); 10].map(|_| AI::new());
-    //let gen = Generation::new();
-
+pub fn test_game() -> bool {
+    let p1 = AI::new();
+    let p2 = AI::new();
+    let mut rng = rand::thread_rng();
+    let mut game = Engine::new();
+    let scores = Architect::run_game(&p1, &p2, &mut rng);
+    println!("scores: {:?}", scores);
     return true;
 }
 

@@ -26,12 +26,15 @@ fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 fn run_tests() -> bool {
     let result: bool;
 
-    if !test::thing_test() {
-        return false;
-    }
     println!("waddup before test_files");
 
-    if !test::test_files() {
+    //if !test::test_files() {
+    //    return false;
+    //}
+    if !test::test_game_manual() {
+        return false;
+    }
+    if !test::test_game() {
         return false;
     }
     println!("waddup end");
@@ -45,7 +48,6 @@ fn run_tests() -> bool {
 struct GenerationManager {
     #[pyo3(get, set)]
     test_num: f32,
-
 }
 #[pymethods]
 impl GenerationManager {
@@ -92,7 +94,7 @@ impl GameManager {
     }
 
     /// Returns the current board as a list TODO need to figure out how to create and return python lists
-    fn peak_board(self_: PyRef<'_, Self>) -> [i8; 32] {
+    fn peek_board(self_: PyRef<'_, Self>) -> [i8; 32] {
         //todo!();
         return [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2];
     }

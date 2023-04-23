@@ -86,7 +86,7 @@ impl Architect {
         }
     }
 
-    /// Runs a single game between to AI players and returns their fitness score.
+    /// Runs a single game between to AI players and returns their fitness scores.
     pub fn run_game(player1: &AI, player2: &AI, rng: &mut ThreadRng) -> (i32, i32) {
         let player_decider: bool = rng.gen(); //decide if player1 is red or black
         let mut game = Engine::new(); //by default black will start
@@ -101,27 +101,53 @@ impl Architect {
         }
 
         let mut scores = [0, 0]; //red, black
+        let mut stale_count = 0;
+        let mut stale_history = [0, 0]; //red, black
 
         // main game loop
         let mut cur_turn = false;
         'turn_loop: loop {
 
+            println!("Game status: red = {}, black = {}, board = {:?}", game.red_pieces, game.black_pieces, &game.peek_black());
             // retrieve output of neural network
             let moves = if cur_turn {
-                p1.calculate(game.peak_red())
+                p1.calculate(game.peek_red())
             } else {
-                p2.calculate(game.peak_black())
+                p2.calculate(game.peek_black())
             };
 
             let mut current_penalty = 0;
+
+            println!("{:?}", moves);
+            println!("this should only print once, although it shouldnt actually");
 
             // find the first valid move
             for cur in moves {
                 let (tile, action) = Architect::index_to_move(cur);
                 let result = game.make_move(tile, action);
-                if let Ok(asdf) = result { //if the move went smoothly
+                //println!("result : {:?}", result);
+                if let Ok(game_result) = result { //if the move went smoothly
+                    // want to check if any pieces have been captured
+                    if stale_history[0] == game.red_pieces && stale_history[1] == game.black_pieces { //no pieces have been captured
+                        stale_count += 1;
+                    } else {
+                        stale_history[0] = game.red_pieces;
+                        stale_history[1] = game.black_pieces;
+                    }
+
+                    if stale_count >= 30 { //end the game
+                        println!("game ended by stalemate");
+                        if game.red_pieces >= game.black_pieces { //black goes first but red gets the stalemate advantage
+                            cur_turn = true;
+                        } else {
+                            cur_turn = false;
+                        }
+                        break 'turn_loop;
+                    }
+
+
                     if cur_turn {scores[0] += current_penalty;} else {scores[1] += current_penalty;} //update penalties
-                    match asdf {
+                    match game_result {
                         engine::CheckersResult::Ok(turn) => {
                             cur_turn = turn;
                             continue 'turn_loop;
@@ -136,15 +162,18 @@ impl Architect {
                 // move did not go smoothly
                 current_penalty -= 1;
             }
+            println!("someone won by default");
             // none of the moves worked, so other player must have won (either by getting trapped or literally having no pieces)
             cur_turn = !cur_turn;
             break 'turn_loop;
         }
 
         if cur_turn { //red won
+            println!("Red won");
             scores[0] += 10;
             scores[1] -= 10;
         } else { //black won
+            println!("Black won");
             scores[0] -= 10;
             scores[1] += 10;
         }

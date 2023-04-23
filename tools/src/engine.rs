@@ -19,6 +19,7 @@ pub enum Action {
 
 
 /// The result of making a move on the board
+#[derive(Debug)]
 pub enum CheckersResult {
     Ok(bool),       //turn is over, contains the current player's turn
     Win(bool),            //win
@@ -35,7 +36,7 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new() -> Self {
-        let board = [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, -1,0, -1,0, -1,0, -1,-1,-1,-1,-1,-1,-1,-1,-1];
+        let board = [-1,-1,-1,-1,-1,-1,-1,-1,-1,0, -1,0, -1,0, -1,0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1];
         //           0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
 
         Engine {
@@ -91,7 +92,7 @@ impl Engine {
             return false;
         }
 
-        let board = if self.current_player {&self.board_red} else {&self.board_black};
+        let board = self.get_board();
         let piece = board[tile as usize];
 
         if piece <= 0 { //ensures there's a moveable piece on this tile for this player
@@ -178,8 +179,6 @@ impl Engine {
 
     // Performs the specified move or defines the error message if the move is invalid
     pub fn make_move(&mut self, tile: u8, action: Action) -> Result<CheckersResult, CheckersError> {
-        //let board = if self.current_player {&self.board_red} else {&self.board_black}; //retrieve the board
-
         if !Engine::is_move_valid(&self, tile, &action) { //ensures coordinates are respected and spaces are open
             return Err(CheckersError::IllegalMove);
         }
@@ -200,8 +199,9 @@ impl Engine {
                 // CASE I
                 // Give control to the other team, and check the four adjacent spaces for any automatic moves
                 // If only one such case then execute automatically, otherwise ask the ai
+                println!("CASE I");
                 self.current_player = !self.current_player;
-                return self.handle_inward_jump(landing_tile);
+                return self.handle_inward_jump(31 - landing_tile); //flip the perspective
             },
             Action::JumpNorthwest => {
                 let killed_tile = Engine::action_on_tile(tile, &Action::MoveNorthwest);
@@ -222,6 +222,7 @@ impl Engine {
         }
         // CASE II
         // Check adjacent spaces for additional jumps 
+        println!("CASE II");
 
         if self.current_player {self.black_pieces -= 1;} else {self.red_pieces -= 1;} //update piece count
         if self.black_pieces == 0 || self.red_pieces == 0 {return Ok(CheckersResult::Win(self.current_player));} //check win
@@ -234,34 +235,28 @@ impl Engine {
     /// Checks and executes inward jumps towards the specified tile
     #[inline]
     fn handle_inward_jump(&mut self, landing_tile: u8) -> Result<CheckersResult, CheckersError> {
+        println!("lt = {}",landing_tile);
+        println!("current player: {}", self.current_player);
+        println!("move valid: {}", self.is_move_valid(15, &Action::JumpSouthwest));
         let mut possible_moves = [false; 4];
-        //let directions = if landing_tile % 2 == 0 { //indices of the spaces around the landing tile
-        //    [landing_tile - 9, landing_tile - 7, landing_tile - 1, landing_tile + 1]
-        //} else {
-        //    [landing_tile - 1, landing_tile + 1, landing_tile + 7, landing_tile + 9]
-        //};
-
-        //possible_moves[0] = self.is_move_valid(directions[0], &Action::JumpSoutheast);
-        //possible_moves[1] = self.is_move_valid(directions[1], &Action::JumpSouthwest);
-        //possible_moves[2] = self.is_move_valid(directions[2], &Action::JumpNortheast);
-        //possible_moves[3] = self.is_move_valid(directions[3], &Action::JumpNorthwest);
-
         let mut directions: [u8; 4] = [0; 4];
         if landing_tile % 2 == 0 {
             possible_moves[0] = if landing_tile < 9  {false} else {directions[0] = landing_tile - 9; self.is_move_valid(directions[0], &Action::JumpSoutheast)};
-            possible_moves[1] = if landing_tile < 7  {false} else {directions[1] = landing_tile - 7; self.is_move_valid(directions[1], &Action::JumpSoutheast)};
-            possible_moves[2] = if landing_tile < 1  {false} else {directions[2] = landing_tile - 1; self.is_move_valid(directions[2], &Action::JumpSoutheast)};
-            possible_moves[3] = if landing_tile > 30 {false} else {directions[3] = landing_tile + 1; self.is_move_valid(directions[3], &Action::JumpSoutheast)};
+            possible_moves[1] = if landing_tile < 7  {false} else {directions[1] = landing_tile - 7; self.is_move_valid(directions[1], &Action::JumpSouthwest)};
+            possible_moves[2] = if landing_tile < 1  {false} else {directions[2] = landing_tile - 1; self.is_move_valid(directions[2], &Action::JumpNortheast)};
+            possible_moves[3] = if landing_tile > 30 {false} else {directions[3] = landing_tile + 1; self.is_move_valid(directions[3], &Action::JumpNorthwest)};
         } else {
             possible_moves[0] = if landing_tile < 1  {false} else {directions[0] = landing_tile - 1; self.is_move_valid(directions[0], &Action::JumpSoutheast)};
-            possible_moves[1] = if landing_tile > 30 {false} else {directions[1] = landing_tile + 1; self.is_move_valid(directions[1], &Action::JumpSoutheast)};
-            possible_moves[2] = if landing_tile > 24 {false} else {directions[2] = landing_tile + 7; self.is_move_valid(directions[2], &Action::JumpSoutheast)};
-            possible_moves[3] = if landing_tile > 22 {false} else {directions[3] = landing_tile + 9; self.is_move_valid(directions[3], &Action::JumpSoutheast)};
+            possible_moves[1] = if landing_tile > 30 {false} else {directions[1] = landing_tile + 1; self.is_move_valid(directions[1], &Action::JumpSouthwest)};
+            possible_moves[2] = if landing_tile > 24 {false} else {directions[2] = landing_tile + 7; self.is_move_valid(directions[2], &Action::JumpNortheast)};
+            possible_moves[3] = if landing_tile > 22 {false} else {directions[3] = landing_tile + 9; self.is_move_valid(directions[3], &Action::JumpNorthwest)};
         }
 
         // get indices of trues
         let valid_bools: Vec<usize> = possible_moves.iter().enumerate().filter_map(|(i,v)| v.then_some(i)).collect();
         
+        println!("inward jump result: {}", valid_bools.len());
+        println!("inward jump bools: {:?}", possible_moves);
         if valid_bools.len() != 1 {
             return Ok(CheckersResult::Ok(self.current_player)); //ask the AI to make the next move
         }
@@ -290,7 +285,7 @@ impl Engine {
         if valid_bools.len() == 0 {
             // turn is over, check automatic moves for enemy
             self.current_player = !self.current_player; //
-            return self.handle_inward_jump(landing_tile); //handle inward jumping
+            return self.handle_inward_jump(31 - landing_tile); //handle inward jumping
         }
         
         if valid_bools.len() > 1 {
@@ -316,20 +311,20 @@ impl Engine {
     }
 
     /// Get a reference to the board for red
-    pub fn peak_red(&self) -> &[i8; 32] {
+    pub fn peek_red(&self) -> &[i8; 32] {
         &self.board_red
     }
     /// Get a reference to the board for black
-    pub fn peak_black(&self) -> &[i8; 32] {
+    pub fn peek_black(&self) -> &[i8; 32] {
         &self.board_black
     }
 
     /// Get a copy of the board for red
-    pub fn peak_red_python(&self) -> [i8; 32] {
+    pub fn peek_red_python(&self) -> [i8; 32] {
         self.board_red.clone()
     }
     /// Get a copy of the board for black
-    pub fn peak_black_python(&self) -> [i8; 32] {
+    pub fn peek_black_python(&self) -> [i8; 32] {
         self.board_black.clone()
     }
 
@@ -352,17 +347,18 @@ impl Engine {
 
     /// Updates both boards at the same time
     pub fn update_board(&mut self, tile: u8, value: i8) {
-        let mut board_main;
-        let mut board_secondary;
+        let board_main;
+        let board_secondary;
+        println!();
         if self.current_player {
-            board_main = self.board_red;
-            board_secondary = self.board_black;
+            board_main = &mut self.board_red;
+            board_secondary = &mut self.board_black;
         } else {
-            board_main = self.board_black;
-            board_secondary = self.board_red;
+            board_main = &mut self.board_black;
+            board_secondary = &mut self.board_red;
         }
         board_main[tile as usize] = value;
-        board_secondary[31 - tile as usize] = 1 - value;
+        board_secondary[31 - tile as usize] = 0 - value;
     }
 }
 

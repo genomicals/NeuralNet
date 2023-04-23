@@ -13,7 +13,7 @@ if __name__ == "__main__":
     test_obj1 = tools.GenerationManager()
     return_num = test_obj.make_move(5, 2)
     print(return_num)
-    matrix = test_obj.peak_board()
+    matrix = test_obj.peek_board()
     print(matrix)
     print(len(matrix))
 
