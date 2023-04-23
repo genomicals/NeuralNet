@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import *
+import threading
 
 #***********************************************************************************
 #utility functions
@@ -226,7 +227,7 @@ def make_board(list, board_squares, blackPiece, redPiece, blackKing, redKing):
     #             square.create_image(25, 25, anchor=CENTER, image=blackKing, tag="piece")
 
 
-def train_generations(window):
+def train_generations(window, GenerationManager):
     # Create new pop-up window
     popup = tk.Toplevel(window)
     popup.title("Generation Generator")
@@ -282,11 +283,11 @@ def train_generations(window):
             status.config(text=f"Training {i+1}/{n} generations...")
             popup2.update()
             #call train generation funciton!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            # Start a new thread to train the generation
-            # thread = threading.Thread(target=train_generation, args=())
-            # thread.start()
+            #Start a new thread to train the generation
+            thread = threading.Thread(target=GenerationManager.train_generation)
+            thread.start()
 
-            #thread.join()
+            thread.join()
 
             totalTrained = totalTrained + 1
 

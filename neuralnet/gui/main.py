@@ -5,6 +5,7 @@ import utils
 import threading
 import random
 import time
+import tools
 
 #***********************************************************************************
 #setup and gameplay
@@ -22,7 +23,7 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     player_turn_label = tk.Label(window, text="", font=("Arial", 16))
     player_turn_label.grid(row=10, column=0, columnspan=10, sticky="nesw")
     
-    list = GameManager.peak_board(2)
+    list = GameManager.peek_board()
     utils.make_board(list, board_squares, blackPiece, redPiece, blackKing, redKing)
     
     square = board_squares[row][col]
@@ -32,9 +33,9 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
 
     tile = utils.getListIndex((row-1,col-1))
     piece = list[tile]
-    if (piece >= 0):
-        player_turn_label.config(text="Invalid Piece")
-        return
+    # if (piece >= 0):
+    #     player_turn_label.config(text="Invalid Piece")
+    #     return
     
     popup = tk.Toplevel()
     popup.title("Choose Move")
@@ -50,7 +51,7 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     # # Center the popup window in the main window
     popup.update_idletasks()
     width = 300
-    height = 200
+    height = 400
     x = (window.winfo_screenwidth() // 2) - (width // 2)
     y = (window.winfo_screenheight() // 2) - (height // 2)
     popup.geometry('{}x{}+{}+{}'.format(width, height, x, y))  
@@ -76,6 +77,16 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     rb3.pack(side="top", anchor="w")
     rb4 = tk.Radiobutton(frame, text="BackRight", variable=move, value=3)
     rb4.pack(side="top", anchor="w")
+
+    rb4 = tk.Radiobutton(frame, text="JumpForwardLeft", variable=move, value=4)
+    rb4.pack(side="top", anchor="w")
+    rb5 = tk.Radiobutton(frame, text="JumpForwardRight", variable=move, value=5)
+    rb5.pack(side="top", anchor="w")
+    rb6 = tk.Radiobutton(frame, text="JumpBackLeft", variable=move, value=6)
+    rb6.pack(side="top", anchor="w")
+    rb7 = tk.Radiobutton(frame, text="JumpBackRight", variable=move, value=7)
+    rb7.pack(side="top", anchor="w")
+
 
     cancel_flag = False  # initialize flag variable
 
@@ -110,7 +121,7 @@ def make_next_move(event, row, col, window, board_squares, blackPiece, redPiece,
     player_turn_label.config(text="AI's Turn (Red)")
     window.update()
     status = GameManager.make_move(tile, action)
-    utils.make_board(GameManager.peak_board(1), board_squares, blackPiece, redPiece, blackKing, redKing)
+    utils.make_board(GameManager.peek_board(), board_squares, blackPiece, redPiece, blackKing, redKing)
 
     if status > 0:
         popup = tk.Toplevel()
@@ -188,12 +199,14 @@ def new_game(window, board_squares, blackPiece, redPiece, blackKing, redKing, Ga
             player_turn_label.config(text="AI's Turn (Red)")
             window.update()
         
-        utils.make_board(GameManager.peak_board(0), board_squares, blackPiece, redPiece, blackKing, redKing)
+        list = GameManager.peek_board()
+        
+        utils.make_board(list, board_squares, blackPiece, redPiece, blackKing, redKing)
         window.update()
         #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         GameManager.new_game(aiStarts)
 
-        utils.make_board(GameManager.peak_board(2), board_squares, blackPiece, redPiece, blackKing, redKing)
+        utils.make_board(GameManager.peek_board(), board_squares, blackPiece, redPiece, blackKing, redKing)
 
         # Create a label to show the current player's turn
         player_turn_label.config(text="Player's turn (Black)")
@@ -227,31 +240,32 @@ class CheckersGame:
     redKing = ImageTk.PhotoImage(resize_image)
 
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # gen = GenerationManager()
-    # gameManager = gen.start_game()
-    #gameManager mock class
-    class GameManager:
+    gen = tools.GenerationManager()
+    GameManager = gen.create_game()
+    #GameManager.new_game(False)
 
-            @staticmethod
-            def new_game(aiStarts):
-                if aiStarts:
-                    time.sleep(5)
+    # class GameManager:
 
-            @staticmethod
-            def make_move(tile, action):
-                #0 make another move, 1 player wins, 2 ai wins
-                print("AI making move...")
-                time.sleep(3)
-                return 0
+    #         @staticmethod
+    #         def new_game(aiStarts):
+    #             if aiStarts:
+    #                 time.sleep(5)
+
+    #         @staticmethod
+    #         def make_move(tile, action):
+    #             #0 make another move, 1 player wins, 2 ai wins
+    #             print("AI making move...")
+    #             time.sleep(3)
+    #             return 0
             
-            @staticmethod
-            def peak_board(n):
-                if n==1:
-                    return [1,1,1,1,1,1,1,1,  1,0,1,0,1,0,1,0,  0,-1,2,-1,0,-1,0,-1,  -1,-1,-1,-1,-1,-1,-1,-1]
-                elif n==0:
-                    return [1,1,1,1,1,1,1,1,  1,0,1,0,1,0,1,0,  0,-1,0,-1,0,-1,0,-1,  -1,-1,-1,-1,-1,-1,-1,-1]
-                else:
-                    return [1,1,1,1,1,1,1,1,  1,0,1,0,1,-2,1,0,  0,-1,0,-1,0,-1,0,-1,  -1,-1,-1,-1,-1,-1,-1,-1]
+    #         @staticmethod
+    #         def peek_board(n):
+    #             if n==1:
+    #                 return [1,1,1,1,1,1,1,1,  1,0,1,0,1,0,1,0,  0,-1,2,-1,0,-1,0,-1,  -1,-1,-1,-1,-1,-1,-1,-1]
+    #             elif n==0:
+    #                 return [1,1,1,1,1,1,1,1,  1,0,1,0,1,0,1,0,  0,-1,0,-1,0,-1,0,-1,  -1,-1,-1,-1,-1,-1,-1,-1]
+    #             else:
+    #                 return [1,1,1,1,1,1,1,1,  1,0,1,0,1,-2,1,0,  0,-1,0,-1,0,-1,0,-1,  -1,-1,-1,-1,-1,-1,-1,-1]
 
 
     #Create the board 
@@ -300,14 +314,14 @@ class CheckersGame:
     # Add game tab
     Game = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="Game", menu=Game)
-    Game.add_command(label="New Game", command=lambda window=window, board_squares=board_squares, blackPiece=blackPiece, redPiece=redPiece, blackKing=blackKing, redKing=redKing, GameManager=GameManager: new_game(window, board_squares, blackPiece, redPiece, blackKing, redKing,GameManager))    
+    Game.add_command(label="New Game", command=lambda window=window, board_squares=board_squares, blackPiece=blackPiece, redPiece=redPiece, blackKing=blackKing, redKing=redKing, GameManager=GameManager: new_game(window, board_squares, blackPiece, redPiece, blackKing, redKing, GameManager))    
     Game.add_separator()
     Game.add_command(label="Exit", command=window.quit)
 
     #Add generations tab
     Generations = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="Generations", menu=Generations)
-    Generations.add_command(label="Train Generations", command=lambda window=window: utils.train_generations(window))
+    Generations.add_command(label="Train Generations", command=lambda window=window, gen=gen: utils.train_generations(window, gen))
     Generations.add_separator()
 
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
