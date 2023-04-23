@@ -69,10 +69,4 @@ impl NeuralNetwork {
 
         output
     }
-
-    /// Set the weights
-    pub fn set_weights(&mut self, weights: Vec<f32>) {
-        //expects size 17322
-        self.weights = weights;
-    }
 }

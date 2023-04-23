@@ -7,19 +7,36 @@ import tools
 
 
 if __name__ == "__main__":
-    print(tools.sum_as_string(1, 3))
 
-    test_obj = tools.GameManager()
-    test_obj1 = tools.GenerationManager()
-    return_num = test_obj.make_move(5, 2)
-    print(return_num)
-    matrix = test_obj.peek_board()
-    print(matrix)
-    print(len(matrix))
 
-    x: list[str] = []
 
-    print(f"Running internal tests: {tools.run_tests()}")
+    gen = tools.GenerationManager()
+    game = gen.create_game()
+    print(f"{gen}")
+    print(f"{game}")
+
+
+
+
+
+
+
+
+
+
+
+
+    #print(tools.sum_as_string(1, 3))
+    #test_obj = tools.GameManager()
+    #return_num = test_obj.make_move(5, 2)
+    #print(return_num)
+    #matrix = test_obj.peek_board()
+    #print(matrix)
+    #print(len(matrix))
+
+    #x: list[str] = []
+
+    #print(f"Running internal tests: {tools.run_tests()}")
 
 
     #network = nn.NeuralNetwork()

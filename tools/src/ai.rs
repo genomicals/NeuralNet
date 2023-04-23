@@ -1,7 +1,6 @@
-use std::{mem, sync::{Mutex, Arc}};
+use std::{sync::{Mutex, Arc}};
 
 use crate::{errors::NeuralNetError, neural_network::NeuralNetwork};
-use pyo3::prelude::*;
 use rand::{Rng, rngs::ThreadRng};
 
 

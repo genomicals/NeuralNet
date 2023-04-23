@@ -1,7 +1,7 @@
 use rand::{rngs::ThreadRng, Rng, seq::IteratorRandom};
 
 use crate::{engine::{self, Engine, Action}, ai::{self, AI}};
-use std::{convert, sync::{Arc, Mutex}, borrow::Borrow, thread, ops::Deref};
+use std::{sync::{Arc, Mutex}, thread, ops::Deref};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
@@ -9,7 +9,7 @@ pub struct Architect {
     pub generation: Arc<Mutex<Vec<Arc<Mutex<AI>>>>>,
     pub fitness: Arc<Mutex<Vec<i32>>>,
     pub bracket: Arc<Mutex<Vec<usize>>>,
-    pub rng: ThreadRng, //using the same engine for rng should increase performance slightly
+    //pub rng: Arc<Mutex<ThreadRng>>, //using the same engine for rng should increase performance slightly
 }
 impl Architect {
     pub fn new() -> Self {
@@ -21,13 +21,14 @@ impl Architect {
             generation: Arc::new(Mutex::new(ai::gen_thousand())),
             fitness: Arc::new(Mutex::new(vec![0; 1000])),
             bracket: Arc::new(Mutex::new(vec![0; 1000])),
-            rng: rand::thread_rng(),
+            //rng: rand::thread_rng(),
         }
     }
 
     /// Creates the tournament bracket, for now this is simple assignment.
     pub fn evolve_generation(&mut self) {
-        self.bracket.lock().unwrap().shuffle(&mut self.rng); //shuffle the bracket
+        let mut rng = thread_rng();
+        self.bracket.lock().unwrap().shuffle(&mut rng); //shuffle the bracket
         self.run_games(); //generate fitnesses
         let min_val = *self.fitness.lock().unwrap().iter().min().unwrap(); //get the absolute minimum in the thing (for shifting all the values)
         let normalize_constant = *self.fitness.lock().unwrap().iter().max().unwrap() + min_val; //find what we need to normalize by
@@ -41,8 +42,8 @@ impl Architect {
         // kill 500 using a very smart algorithm
         let mut count = 0;
         while count < 500 {
-            let p = probabilities.iter().enumerate().choose(&mut self.rng).unwrap();
-            let realized_prob = self.rng.gen_range(0.0..1.05); //no ai is safe
+            let p = probabilities.iter().enumerate().choose(&mut rng).unwrap();
+            let realized_prob = rng.gen_range(0.0..1.05); //no ai is safe
             if *p.1 < realized_prob {
                 count += 1;
                 self.fitness.lock().unwrap().swap_remove(p.0);
@@ -53,9 +54,9 @@ impl Architect {
 
         for _ in 0..500 {
             let mut gen = self.generation.lock().unwrap();
-            let a0 = gen.choose(&mut self.rng).unwrap();
-            let a1 = gen.choose(&mut self.rng).unwrap(); //if one ai breeds with itself, we ball
-            let new_genome = ai::reproduce(a0.lock().unwrap().deref(), a1.lock().unwrap().deref(), &mut self.rng).unwrap(); //we know our ais are the same size
+            let a0 = gen.choose(&mut rng).unwrap();
+            let a1 = gen.choose(&mut rng).unwrap(); //if one ai breeds with itself, we ball
+            let new_genome = ai::reproduce(a0.lock().unwrap().deref(), a1.lock().unwrap().deref(), &mut rng).unwrap(); //we know our ais are the same size
             gen.push(Arc::new(Mutex::new(AI::with_genome(new_genome))));
             self.fitness.lock().unwrap().push(0);
         }
@@ -233,6 +234,21 @@ impl Architect {
         }
 
         if player_decider {(scores[0], scores[1])} else {(scores[1], scores[0])}
+    }
+
+    /// Converts a number to an action
+    pub fn num_to_action(num: u8) -> Action {
+        match num {
+            0 => Action::MoveNorthwest,
+            1 => Action::MoveNortheast,
+            2 => Action::MoveSouthwest,
+            3 => Action::MoveSoutheast,
+            4 => Action::JumpNorthwest,
+            5 => Action::JumpNortheast,
+            6 => Action::JumpSouthwest,
+            7 => Action::JumpSoutheast,
+            _ => unreachable!()
+        }
     }
 
     /// Converts an index (0 through 169) into a tile and action

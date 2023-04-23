@@ -1,5 +1,3 @@
-use std::io::prelude::*;
-use std::io::BufReader;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::{env, fs::{self, File}, io::{Read, Write}, path::Path};
@@ -8,7 +6,8 @@ use crate::{ai::AI, errors::NeuralNetError};
 
 
 /// Saves the given generation onto the filesystem
-pub fn save_generation(ais: &Vec<Arc<Mutex<AI>>>, name: &str) -> Result<(), NeuralNetError> {
+pub fn save_generation(ais: Arc<Mutex<Vec<Arc<Mutex<AI>>>>>, name: &str) -> Result<(), NeuralNetError> {
+    let ais = ais.lock().unwrap();
     let cur = env::current_dir(); //grabs current directory
     if let Err(_) = cur {
         return Err(NeuralNetError::GenerationNotSaved); //handles error

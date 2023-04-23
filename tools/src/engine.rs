@@ -260,7 +260,7 @@ impl Engine {
         if valid_bools.len() != 1 {
             return Ok(CheckersResult::Ok(self.current_player)); //ask the AI to make the next move
         }
-
+        // Find cool way of skipping this code when playing against a player? Like [Debug] attr in C# won't run in release.
         // we know we need to execute an automatic move
         match valid_bools[0] {
             0 => return self.make_move(directions[0], Action::JumpSoutheast), //moving from northwest to southeast
@@ -328,21 +328,10 @@ impl Engine {
         self.board_black.clone()
     }
 
-    /// Prints the current state of the board, for debugging
-    pub fn print_board(&self) {
-        //println!("{:?}", self.board);
-    }
-
     /// Get the current board as immutable
     #[inline]
     pub fn get_board(&self) -> &[i8; 32] {
         if self.current_player {&self.board_red} else {&self.board_black} //retrieve the board
-    }
-
-    /// Get the current board as mutable
-    #[inline]
-    pub fn get_board_mut(&mut self) -> &mut [i8; 32] {
-        if self.current_player {&mut self.board_red} else {&mut self.board_black} //retrieve the board
     }
 
     /// Updates both boards at the same time

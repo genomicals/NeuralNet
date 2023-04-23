@@ -71,10 +71,10 @@ pub fn test_evolve() -> bool {
 pub fn test_files() -> bool {
     println!("here generating a new generation");
     //let gen = Generation::new(); // Create new Generation
-    let ais = ai::gen_thousand();
+    let ais = Arc::new(Mutex::new(ai::gen_thousand()));
 
     println!("here before saving");
-    let res = files::save_generation(&ais, "test_gen"); // Save the Generation
+    let res = files::save_generation(ais.clone(), "test_gen"); // Save the Generation
     if let Err(_) = res {
         println!("In the Err");
         return false;
@@ -95,6 +95,7 @@ pub fn test_files() -> bool {
     let l_gen = l_gen.unwrap();
     // check if each of the ai's match.. just in case.
     //gen.ais.iter().reduce(|acc, e| )
+    let ais = ais.lock().unwrap();
     for i in 0..ais.len() {
         if ais[i].lock().unwrap().deref() != l_gen[i].lock().unwrap().deref() {
             println!("Ai #:{} failed", i);

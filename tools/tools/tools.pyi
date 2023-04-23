@@ -15,6 +15,32 @@ class GenerationManager:
     The main way to train and interact with the AI.
     """
 
+    def train_generations(self, num_generations: int):
+        """
+        Trains the AI for a certain number of generations.
+        """
+
+    def train_generation(self):
+        """
+        Trains the AI for a single generation.
+        """
+
+    def create_game(self) -> GameManager:
+        """
+        Starts a GameManager for the current best AI.
+        """
+
+    
+    def save_generation(self, name: str):
+        """
+        Save the current generation under the given name
+        """
+
+    def load_generation(self, name: str):
+        """
+        Load the generation with the given name
+        """
+
 
 class GameManager:
     """
@@ -28,7 +54,7 @@ class GameManager:
 
     def make_move(self, tile: int, action: int) -> int:
         """
-        Makes the current player's move.
+        Allows the Player to take their turn, and then has the AI take its turn.
         """
 
     def peak_board(self) -> list[int]:
