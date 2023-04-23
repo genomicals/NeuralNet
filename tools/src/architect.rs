@@ -54,11 +54,20 @@ impl Architect {
 
         for _ in 0..500 {
             let mut gen = self.generation.lock().unwrap();
-            let a0 = gen.choose(&mut rng).unwrap();
-            let a1 = gen.choose(&mut rng).unwrap(); //if one ai breeds with itself, we ball
+
+            let a0_index = rng.gen_range(0..500);
+            let mut a1_index = rng.gen_range(0..500);
+            while a0_index == a1_index { //ensure the two ais are unique, not just for genetic diversity but also to avoid deadlocks with the mutexes
+                a1_index = rng.gen_range(0..500);
+            }
+            let a0 = gen[a0_index as usize].clone();
+            let a1 = gen[a1_index as usize].clone();
             let new_genome = ai::reproduce(a0.lock().unwrap().deref(), a1.lock().unwrap().deref(), &mut rng).unwrap(); //we know our ais are the same size
             gen.push(Arc::new(Mutex::new(AI::with_genome(new_genome))));
             self.fitness.lock().unwrap().push(0);
+            drop(a0);
+            drop(a1);
+            drop(gen);
         }
     }
 
