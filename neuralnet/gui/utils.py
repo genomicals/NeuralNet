@@ -4,6 +4,91 @@ from tkinter import *
 #***********************************************************************************
 #utility functions
 #***********************************************************************************
+
+
+# def convertListToMatrix(list):
+#     #list = [1,1,1,1,1,1,1,1, 1,0,1,0,1,0,1,0, 0,-1,0,-1,0,-1,0,-1, -1,-1,-1,-1,-1,-1,-1,-1]
+#     # matrix = [[ 1, 1, 1, 1],
+#     #           [ 1, 1, 1, 1],
+#     #           [ 1, 1, 1, 1],
+#     #           [ 0, 0, 0, 0],
+#     #           [ 0, 0, 0, 0],
+#     #           [-1,-1,-1,-1],
+#     #           [-1,-1,-1,-1],
+#     #           [-1,-1,-1,-1]]
+
+#     matrix = [[0 for _ in range(4)] for _ in range(8)]
+#     print(str(list))
+
+#     i = 0
+#     while i < 32:
+        
+#         for j in range(0,8,2):
+
+#             for k in range(0,4):
+#                 col = k
+
+#                 if i % 2 == 0:
+#                     row = j
+#                 else:
+#                     row = j+1
+
+#                 matrix[row][col] = list[i]
+#                 print(f"Matrix: ({row},{col})")
+#                 print(f"List: {i}")
+#                 print(list[i])
+#                 i += 1
+
+#                 # square = board_squares[row][col]
+#                 # square.delete("piece")
+
+#                 # piece = board_list[i]
+#                 # if (piece == 1):
+#                 #     square.create_image(25, 25, anchor=CENTER, image=redPiece, tag="piece")
+#                 # elif (piece == -1):
+#                 #     square.create_image(25, 25, anchor=CENTER, image=blackPiece, tag="piece")
+#                 # elif (piece == 2):
+#                 #     square.create_image(25, 25, anchor=CENTER, image=redKing, tag="piece")
+#                 # elif (piece == -2):
+#                 #     square.create_image(25, 25, anchor=CENTER, image=blackKing, tag="piece")
+
+#     return matrix
+def getListIndex(coords):
+    coordsDict = {(0,0): 0,
+                  (1,1): 1,
+                  (0,2): 2,
+                  (1,3): 3,
+                  (0,4): 4,
+                  (1,5): 5,
+                  (0,6): 6,
+                  (1,7): 7,
+                  (2,0): 8,
+                  (3,1): 9,
+                  (2,2): 10,
+                  (3,3): 11,
+                  (2,4): 12,
+                  (3,5): 13,
+                  (2,6): 14,
+                  (3,7): 15,
+                  (4,0): 16,
+                  (5,1): 17,
+                  (4,2): 18,
+                  (5,3): 19,
+                  (4,4): 20,
+                  (5,5): 21,
+                  (4,6): 22,
+                  (5,7): 23,
+                  (6,0): 24,
+                  (7,1): 25,
+                  (6,2): 26,
+                  (7,3): 27,
+                  (6,4): 28,
+                  (7,5): 29,
+                  (6,6): 30,
+                  (7,7): 31}
+    
+    return coordsDict[coords]
+
 def getStartPlayer(window):
     popup = tk.Toplevel()
     popup.title("Starting Player")
@@ -66,8 +151,6 @@ def getGameType(window):
     game = tk.IntVar()
 
     # Create the radio buttons
-    rb1 = tk.Radiobutton(frame, text="Player vs Player", variable=game, value=0)
-    rb1.pack(side="top", anchor="w")
     rb2 = tk.Radiobutton(frame, text="Player vs AI", variable=game, value=1)
     rb2.pack(side="top", anchor="w")
 
@@ -82,8 +165,9 @@ def getGameType(window):
 
     return game.get()
 
-#makes a board based on a given list of 32 spaces
-def make_board(board_list, board_squares, blackPiece, redPiece, blackKing, redKing):
+#makes a board based on a given 8x4 matrix
+def make_board(list, board_squares, blackPiece, redPiece, blackKing, redKing):
+
     i = 0
 
     while i < 32:
@@ -101,7 +185,7 @@ def make_board(board_list, board_squares, blackPiece, redPiece, blackKing, redKi
                 square = board_squares[row][col]
                 square.delete("piece")
 
-                piece = board_list[i]
+                piece = list[i]
                 if (piece == 1):
                     square.create_image(25, 25, anchor=CENTER, image=redPiece, tag="piece")
                 elif (piece == -1):
@@ -112,28 +196,26 @@ def make_board(board_list, board_squares, blackPiece, redPiece, blackKing, redKi
                     square.create_image(25, 25, anchor=CENTER, image=blackKing, tag="piece")
 
                 i += 1
-                
-
-                    
-
-
 
     # for row in range(len(board_matrix)):
     #     for col in range(len(board_matrix[0])):
-
-    #         if ((row+1)%2 == 1):
-
-    #             square = board_squares[row+1][col*2+1]
+    #         #print(f"Matrix: row: {row}, col: {col}")
+    #         if ((row)%2 == 1):
+                
+    #             square = board_squares[row+1][(col*2)+2]
+    #             #print(f"Board: row: {row+1}, col: {(col*2)+2}")
     #             square.delete("piece")
     #             #square.create_image(25, 25, anchor=CENTER, image=blackPiece, tag="piece")
     #             #square.create_image(25, 25, anchor=CENTER, image=redPiece, tag="piece")
     #         else:
-    #             square = board_squares[row+1][(col+1)*2]
+    #             square = board_squares[row+1][(col*2)+1]
+    #             #print(f"Board: row: {row+1}, col: {(col*2)+1}")
     #             square.delete("piece")
     #             #square.create_image(25, 25, anchor=CENTER, image=blackPiece, tag="piece")
     #             #square.create_image(25, 25, anchor=CENTER, image=blackPiece, tag="piece")
 
     #         piece = board_matrix[row][col]
+    #         #print(f"Piece: {piece}")
     #         if (piece == 1):
     #             square.create_image(25, 25, anchor=CENTER, image=redPiece, tag="piece")
     #         elif (piece == -1):
@@ -156,15 +238,25 @@ def train_generations(window):
     num_generations = tk.Entry(popup)
     num_generations.grid(row=1, column=0)
 
-    
-    def train():
-        print("running train")
-        n = int(num_generations.get())
+    #Train a specified number of generations
+    def train(infinite):
+        print("running train...")
+        if (infinite != True):
+            n = int(num_generations.get())
+        else:
+            n = 1
+
         popup.destroy()
         popup2 = tk.Toplevel(window)
-        popup2.title("Generating")
-        status = tk.Label(popup2)
-        status.grid(row=0, column=0)
+        popup2.title("Generation Trainer")
+
+        # create a frame
+        frame = tk.Frame(popup2)
+        frame.pack()
+
+        status = tk.Label(frame)
+        status.pack()
+
         # Center the popup window in the main window
         popup2.update_idletasks()
         width = 300
@@ -174,32 +266,51 @@ def train_generations(window):
         popup2.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
         stop = False
+        totalTrained = 0
 
         def stop_training():
-            global stop
+            nonlocal stop  # use nonlocal to modify outer variable
             stop = True
 
-        # Create OK button that retrieves name and closes window
+        # Create stop button to stop the training
         stop_button = tk.Button(popup2, text="Stop Training", command = stop_training)
-        stop_button.grid(row=5, column=0)   
+        stop_button.pack()
 
-        for i in range(0, n):
-            popup2.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        i = 0
+
+        while(i < n):
             status.config(text=f"Training {i+1}/{n} generations...")
-            #call train generation funciton-----------------------------------------------
+            popup2.update()
+            #call train generation funciton!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            # Start a new thread to train the generation
+            # thread = threading.Thread(target=train_generation, args=())
+            # thread.start()
+
+            #thread.join()
+
+            totalTrained = totalTrained + 1
+
             if (stop == True):
                 break
-        stop = False
 
-        result = tk.Label(popup2)
-        result.grid(row=1, column=0)
-        result.config(text=f"Training of {n} generations completed!")
+            if infinite == False:
+                i = i+1
+            else:
+                i = i+1
+                n = n+1
+
+        result = tk.Label(frame)
+        result.pack(side="top", anchor="w")
+        result.config(text=f"Training of {totalTrained}/{n} generations completed!")
             
 
     # Create OK button that retrieves name and closes window
-    ok_button = tk.Button(popup, text="OK", command = train)
+    ok_button = tk.Button(popup, text="OK", command=lambda: train(False))
     ok_button.grid(row=2, column=0)  
-    
+
+    # Create infinite button
+    infinite_button = tk.Button(popup, text="Infinite", command=lambda: train(True))
+    infinite_button.grid(row=3, column=0)  
 
     # Center the popup window in the main window
     popup.update_idletasks()
