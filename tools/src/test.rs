@@ -48,6 +48,18 @@ pub fn test_game() -> bool {
     return true;
 }
 
+
+pub fn test_reproduce() -> bool {
+    //let p1 = Arc::new(Mutex::new(AI::new()));
+    //let p2 = Arc::new(Mutex::new(AI::new()));
+    let p1 = AI::new();
+    let p2 = AI::new();
+    let mut rng = rand::thread_rng();
+    let x = ai::reproduce(&p1, &p2, &mut rng);
+
+    true
+}
+
 pub fn test_evolve() -> bool {
     let mut arch = Architect::new();
     arch.evolve_generation();

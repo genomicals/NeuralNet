@@ -124,13 +124,30 @@ pub fn reproduce(parent0: &AI, parent1: &AI, rng: &mut ThreadRng) -> Result<Vec<
     let slice0: &[f32];
     let slice1: &[f32];
 
+    //if rand::thread_rng().gen_bool(0.5) {
+    //    slice0 = &parent0.genome[0..cut_index];
+    //    slice1 = &parent1.genome[cut_index..];
+    //    genome[0..cut_index].copy_from_slice(slice0); //copy to first part of new genome
+    //    genome[cut_index..].copy_from_slice(slice1); //copy to second part of new genome
+    //} else {
+    //    slice1 = &parent0.genome[0..cut_index];
+    //    slice0 = &parent1.genome[cut_index..];
+    //    genome[0..cut_index].copy_from_slice(slice1); //copy to first part of new genome
+    //    genome[cut_index..].copy_from_slice(slice0); //copy to second part of new genome
+    //}
+
+    let n_parent0;
+    let n_parent1;
     if rand::thread_rng().gen_bool(0.5) {
-        slice0 = &parent0.genome[0..cut_index];
-        slice1 = &parent1.genome[cut_index..];
+        n_parent0 = parent0;
+        n_parent1 = parent1;
     } else {
-        slice1 = &parent0.genome[0..cut_index];
-        slice0 = &parent1.genome[cut_index..];
+        n_parent0 = parent1;
+        n_parent1 = parent0;
     }
+
+    slice0 = &n_parent0.genome[0..cut_index];
+    slice1 = &n_parent1.genome[cut_index..];
     genome[0..cut_index].copy_from_slice(slice0); //copy to first part of new genome
     genome[cut_index..].copy_from_slice(slice1); //copy to second part of new genome
 
@@ -141,19 +158,19 @@ pub fn reproduce(parent0: &AI, parent1: &AI, rng: &mut ThreadRng) -> Result<Vec<
     3. Enact the mutations
 
     */
-    let num_mutations: usize = (genome[17323].tanh() * 500.0 + 505.0).round() as usize; // [5, 1005]
+    let num_mutations: usize = (genome[17322].tanh() * 500.0 + 505.0).round() as usize; // [5, 1005]
     let mut mutability_range: f32;
     let mut index: usize;
 
     for _ in 0..num_mutations {
         index = rand::thread_rng().gen_range(0..17323);
-        mutability_range = 0.75 * (genome[17323] + 0.01);
+        mutability_range = 0.75 * (genome[17322].abs() + 0.01);
         genome[index] = (genome[index]
             + rand::thread_rng().gen_range(-mutability_range..mutability_range))
         .max(2.0)
         .min(-2.0); //mutate and cap the weight
     }
-    genome[17323] = genome[17323].min(0.0).max(1.0); //cap the mutability
+    genome[17322] = genome[17322].min(0.0).max(1.0); //cap the mutability
 
     Ok(genome)
 }
