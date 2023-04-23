@@ -57,7 +57,7 @@ class GameManager:
         Allows the Player to take their turn, and then has the AI take its turn.
         """
 
-    def peak_board(self) -> list[int]:
+    def peek_board(self) -> list[int]:
         """
         Returns the current board as a list.
         """
